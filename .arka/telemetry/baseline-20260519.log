@@ -1,0 +1,9 @@
+
+Warning: Failed to set memory limit to 1048576 bytes (Current memory usage is 2097152 bytes) in Unknown on line 0
+
+Warning: Failed to set memory limit to 1048576 bytes (Current memory usage is 2097152 bytes) in Unknown on line 0
+{"tool":"pest","raw":["app/Providers/AppServiceProvider.php .. 100%","app/Providers/HorizonServiceProvider.php .. pa30 75%"]}
+{"tool":"pest","raw":["app/Providers/AppServiceProvider.php .. 100%","app/Models/User.php .. 100%"]}
+{"tool":"pest","raw":["app/Providers/AppServiceProvider.php .. 100%","ERROR Type coverage below expected: 100.0%, currently 91.6%"]}
+Script pest --type-coverage --min=100 handling the test:type-coverage event returned with error code 1
+Script @test:type-coverage was called via test
