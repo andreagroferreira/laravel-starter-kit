@@ -1,0 +1,39 @@
+{
+    "$schema": "https://json.schemastore.org/claude-code-settings.json",
+    "permissions": {
+        "allow": [
+            "Bash(composer:*)",
+            "Bash(php artisan:*)",
+            "Bash(vendor/bin/pint:*)",
+            "Bash(vendor/bin/rector:*)",
+            "Bash(vendor/bin/phpstan:*)",
+            "Bash(vendor/bin/pest:*)",
+            "Bash(vendor/bin/infection:*)",
+            "Bash(bin/arka-gate)",
+            "Bash(bin/arka-sync-agents)",
+            "Bash(bun:*)",
+            "Bash(git status)",
+            "Bash(git diff:*)",
+            "Bash(git log:*)",
+            "Bash(git branch:*)",
+            "Bash(ls:*)"
+        ]
+    },
+    "hooks": {
+        "UserPromptSubmit": [
+            { "command": ".claude/hooks/user-prompt-submit.sh" }
+        ],
+        "SessionStart": [
+            { "command": ".claude/hooks/session-start.sh" }
+        ],
+        "PreToolUse": [
+            { "matcher": { "tool": "Bash", "command_regex": "^(git\\s+(add|commit|push)|gh\\s+(pr|repo))" }, "command": ".claude/hooks/pre-tool-use-git.sh" },
+            { "matcher": { "tool": "Bash" }, "command": ".claude/hooks/pre-tool-use-bash.sh" },
+            { "matcher": { "tool": "Edit" }, "command": ".claude/hooks/pre-tool-use-edit.sh" },
+            { "matcher": { "tool": "Write" }, "command": ".claude/hooks/pre-tool-use-edit.sh" }
+        ],
+        "Stop": [
+            { "command": ".claude/hooks/stop.sh" }
+        ]
+    }
+}
