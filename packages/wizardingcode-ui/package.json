@@ -1,0 +1,15 @@
+{
+    "name": "@wizardingcode/ui",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "main": "resources/components/index.ts",
+    "exports": {
+        ".": "./resources/components/index.ts",
+        "./composables/*": "./resources/composables/*.ts"
+    },
+    "peerDependencies": {
+        "vue": "^3.5",
+        "@nuxt/ui": "^4.0"
+    }
+}
