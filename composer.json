@@ -9,8 +9,10 @@
     ],
     "license": "MIT",
     "require": {
+        "php": "^8.4.0",
         "bepsvpt/secure-headers": "^7.5",
         "dedoc/scramble": "^0.13.23",
+        "inertiajs/inertia-laravel": "^3.1",
         "laravel/ai": "^0.6.8",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.9.0",
@@ -23,7 +25,6 @@
         "laravel/socialite": "^5.27",
         "league/flysystem-aws-s3-v3": "^3.34",
         "nunomaduro/essentials": "^1.2.0",
-        "php": "^8.4.0",
         "sentry/sentry-laravel": "^4.25.1",
         "spatie/laravel-activitylog": "^4.12.3",
         "spatie/laravel-data": "^4.23",
