@@ -52,6 +52,13 @@ final class Customer extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
+    // Mirror DB column defaults so freshly created models have the expected
+    // attribute values in memory without an explicit refresh. The parent
+    // Eloquent Model declares $attributes untyped, so we keep it untyped here.
+    protected $attributes = [
+        'role' => 'free',
+    ];
+
     /**
      * @return array<string, string>
      */
