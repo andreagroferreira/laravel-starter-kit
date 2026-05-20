@@ -1,8 +1,8 @@
 parameters:
 	ignoreErrors:
 		-
-			message: '#^Parameter \#1 \$url of function parse_url expects string, mixed given\.$#'
-			identifier: argument.type
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
 			count: 1
 			path: config/fortify.php
 
@@ -11,18 +11,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: config/horizon.php
-
-		-
-			message: '#^Parameter \#2 \$string of function explode expects string, bool\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: config/pulse.php
-
-		-
-			message: '#^Parameter \#2 \$string of function explode expects string, bool\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: config/sanctum.php
 
 		-
 			message: '#^Cannot access offset ''model_has_permissions'' on mixed\.$#'
