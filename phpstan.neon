@@ -14,6 +14,11 @@ parameters:
         - routes
         - tests
     excludePaths:
+        # The `(?)` suffix marks a path as OPTIONAL — PHPStan will not error if
+        # the path does not exist. Official syntax (see PHPStan 2.x:
+        # OptionalPath in DependencyInjection/Neon). Used here for files that
+        # exist in some Laravel layouts but not others (Kernel.php in L10-, and
+        # nested vendor dirs only present when packages/ is populated).
         - app/Console/Kernel.php (?)
         - bootstrap/cache/*
         - storage/*
