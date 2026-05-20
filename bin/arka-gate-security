@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Helper: extra security checks for arka:gate (gitleaks if available)
+
+set -uo pipefail
+
+if command -v gitleaks >/dev/null 2>&1; then
+    gitleaks detect --no-banner --redact --exit-code 1 || exit 1
+else
+    echo "warn: gitleaks not installed locally; relying on CI for secrets scan"
+fi
+
+exit 0

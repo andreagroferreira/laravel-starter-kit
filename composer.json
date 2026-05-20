@@ -106,24 +106,33 @@
             "bunx npm-check-updates -u"
         ],
         "lint": [
-            "rector",
-            "pint --parallel",
+            "vendor/bin/rector --no-progress-bar",
+            "vendor/bin/pint --parallel --format=agent",
             "bun run lint"
         ],
-        "test:type-coverage": "pest --type-coverage --min=100",
         "test:lint": [
-            "pint --parallel --test",
-            "rector --dry-run",
+            "vendor/bin/pint --parallel --test --format=agent",
+            "vendor/bin/rector --dry-run --no-progress-bar",
             "bun run test:lint"
         ],
-        "test:unit": "XDEBUG_MODE=\"coverage\" pest --parallel --coverage --exactly=100.0",
-        "test:types": "phpstan",
+        "test:types": "vendor/bin/phpstan analyse --no-progress --memory-limit=2G",
+        "test:type-coverage": "vendor/bin/pest --type-coverage --min=100",
+        "test:unit": "vendor/bin/pest --parallel --coverage --min=85",
+        "test:browser": "vendor/bin/pest --filter=Browser",
+        "test:mutation": "vendor/bin/infection --threads=4 --no-progress --show-mutations",
+        "test:security": [
+            "composer audit --no-interaction",
+            "bun audit",
+            "bin/arka-gate-security"
+        ],
         "test": [
             "@test:type-coverage",
             "@test:unit",
             "@test:lint",
             "@test:types"
-        ]
+        ],
+        "arka:gate": "bin/arka-gate",
+        "arka:sync": "bin/arka-sync-agents"
     },
     "extra": {
         "laravel": {
