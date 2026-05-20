@@ -2,10 +2,30 @@
     "mcpServers": {
         "laravel-boost": {
             "command": "php",
-            "args": [
-                "artisan",
-                "boost:mcp"
-            ]
+            "args": ["artisan", "boost:mcp"]
+        },
+        "context7": {
+            "command": "bunx",
+            "args": ["-y", "@upstash/context7-mcp@latest"]
+        },
+        "obsidian": {
+            "command": "bunx",
+            "args": ["-y", "@modelcontextprotocol/server-obsidian@latest"],
+            "env": {
+                "OBSIDIAN_VAULT_PATH": "${OBSIDIAN_VAULT_PATH}"
+            }
+        },
+        "claude-mem": {
+            "command": "bunx",
+            "args": ["-y", "@claude-mem/server@latest"]
+        },
+        "playwright": {
+            "command": "bunx",
+            "args": ["-y", "@playwright/mcp@latest"]
+        },
+        "nuxt-ui": {
+            "command": "bunx",
+            "args": ["-y", "@nuxt/ui-mcp@latest"]
         }
     }
 }
