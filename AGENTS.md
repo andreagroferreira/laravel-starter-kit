@@ -1,156 +1,133 @@
-<laravel-boost-guidelines>
-=== foundation rules ===
+<!-- @arkaos-version: 2.0.0+ -->
+<!-- @boilerplate-version: 1.0.0-draft -->
+<!-- @generated-by: bin/arka-sync-agents (do NOT edit AGENTS.md / GEMINI.md directly) -->
 
-# Laravel Boost Guidelines
+# WizardingCode Boilerplate — Agent Instructions
 
-The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to ensure the best experience when building Laravel applications.
+> This file is the ArkaOS-aware contract for ALL agents (Claude Code, Codex, Gemini, Cursor, Junie). It is the source of truth — `AGENTS.md` and `GEMINI.md` are generated from this file via `bin/arka-sync-agents`.
 
-## Foundational Context
+## §1 — Constitution (NON-NEGOTIABLE)
 
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
+These rules are mandatory. No exceptions. No workarounds. Violation is grounds for PR rejection.
 
-- php - 8.4
-- laravel/framework (LARAVEL) - v13
-- laravel/prompts (PROMPTS) - v0
-- larastan/larastan (LARASTAN) - v3
-- laravel/boost (BOOST) - v2
-- laravel/mcp (MCP) - v0
-- laravel/pail (PAIL) - v1
-- laravel/pint (PINT) - v1
-- pestphp/pest (PEST) - v5
-- phpunit/phpunit (PHPUNIT) - v13
-- rector/rector (RECTOR) - v2
+1. **Mandatory 13-phase flow** for every non-trivial request. Emit `[arka:phase:N] <label>` at the start of each phase. Trivial bypass only for single-file edits under 10 lines.
+2. **Squad routing**: emit `[arka:routing] <dept> -> <lead>` as the first non-trivial line of every response. No generic-assistant replies.
+3. **KB-first research**: search Obsidian vault `Projects/Boilerplate WizardingCode/` BEFORE Context7, WebSearch, or WebFetch. Cite `[[wikilinks]]` or declare a KB gap explicitly.
+4. **Spec-driven**: no code without an approved spec in `docs/superpowers/specs/`. Trivial fixes (<10 lines, single file) excepted.
+5. **Quality Gate**: every "done" status requires `composer arka:gate` PASSED within the last hour. Reviewed by Marta (CQO) + Eduardo (Copy) + Francisca (Tech).
+6. **Dual-auth discipline**: never mix `auth('web')` (Staff) and `auth('customer')` (Customer). Tables `users` and `customers` are separate. Guards are separate.
+7. **Dynamic-settings-only**: storage providers, email providers, AI providers, branding, retention policies live in `app_settings` (DB) — NOT in `.env`.
+8. **Vendor-lock respect**: files with `@vendor:` header are off-limits without `/wc-vendor-upgrade` workflow.
+9. **No-secrets-commit**: enforced via gitleaks pre-commit + forbidden-files list.
+10. **No-self-approval**: PR author cannot approve their own PR. Marta+Eduardo+Francisca review needed for "done".
 
-## Skills Activation
+## §2 — Squad Routing (this project)
 
-This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.
+| Department | Lead | When to route |
+|---|---|---|
+| `dev` | Paulo (backend) | Backend code, models, services, actions, packages |
+| `dev` | Ines (frontend) | Inertia, Vue, Nuxt UI, components, pages, layouts |
+| `qa` | Francisca | Tests, coverage, quality gate, infection |
+| `security` | Bruno | Auth, headers, secrets, OWASP, GDPR, audit log |
+| `ops` | Daniel | CI/CD, Docker, deploy, observability, migrations |
+| `pm` | Carolina | Specs, backlog, sprint planning, story splitting |
+| `brand` | Valentina | UI/UX, theme, dark/light validation, KB Obsidian UI/UX |
 
-## Conventions
+Cross-cutting: `[arka:routing] dev -> Paulo, Ines` for full-stack tasks.
 
-- You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, and naming.
-- Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
-- Check for existing components to reuse before writing a new one.
+## §3 — Stack Reference
 
-## Verification Scripts
+- **PHP**: 8.4
+- **Laravel**: 13.9 + Horizon + Fortify + Sanctum + Socialite + Scout + Pennant + Reverb + AI + Pulse
+- **Auth**: Dual — Staff (Fortify sessions + 2FA + Spatie Permission) | Customer (Sanctum + Socialite)
+- **Frontend** (monolith mode): Inertia v3 + Vue 3 + Nuxt UI 4 + Pinia + Tailwind 4 + Bun + Vite+
+- **Tests**: Pest 5 (browser via Playwright) + 100% type coverage + Infection MSI ≥ 75%
+- **Quality**: Pint + Rector + PHPStan L9 + ESLint + Vitest
+- **Settings**: Laravel Pennant + `app_settings` (key/value JSON, encrypted secrets)
+- **Realtime**: Reverb (default)
+- **Search**: Scout + Meilisearch
+- **Files**: Spatie MediaLibrary + S3 + ClamAV
+- **Observability**: Sentry + Pulse + Telescope (dev)
 
-- Do not create verification scripts or tinker when tests cover that functionality and prove they work. Unit and feature tests are more important.
+Quick commands:
+```
+composer setup            # initial install
+composer dev              # all services concurrently
+composer arka:gate        # 9-phase quality gate
+composer lint             # pint + rector + lint frontend
+composer test             # full test chain
+bin/arka-sync-agents      # multi-runtime sync
+php artisan wizardingcode:install   # install wizard (Plan 4)
+```
 
-## Application Structure & Architecture
+## §4 — Laravel Boost Guidelines
 
-- Stick to existing directory structure; don't create new base folders without approval.
-- Do not change the application's dependencies without approval.
+(retained from upstream — see `.agents/skills/laravel-best-practices/SKILL.md` for full rules)
 
-## Frontend Bundling
+- Always use `php artisan make:*` commands to create files. Pass `--no-interaction`.
+- Use Laravel Boost MCP tools (`database-query`, `database-schema`, `search-docs`, `get-absolute-url`, `browser-logs`, `tinker`) over manual alternatives.
+- `search-docs` BEFORE making code changes — version-specific docs.
+- PHP rules: curly braces always; constructor property promotion; explicit types; TitleCase enum keys; PHPDoc with array shapes.
+- Models: factories + seeders for every model. Faker locale `pt_PT`.
 
-- If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
+## §5 — WizardingCode Conventions
 
-## Documentation Files
+- **FormRequest mandatory** in every controller action with user input. NEVER `$request->all()`.
+- **API Resource mandatory** in every JSON response. NEVER return raw models.
+- **Eloquent queries in Services or Actions only** — never in controllers.
+- **Single-action controllers** (`__invoke`) for non-CRUD endpoints. Resource controllers for CRUD.
+- **Models**: `$fillable` explicit; `$guarded = []` is FORBIDDEN.
+- **Migrations**: additive only. Deprecate-then-remove in 2 releases. Never DROP/RENAME without explicit allow flag.
+- **Promotion rule**: promote `app/Models/X` to `app/Domains/X/` when ≥ 5 related files OR ≥ 2 shared contexts (Francisca reviews in PR).
 
-- You must only create documentation files if explicitly requested by the user.
+## §6 — Inertia + Vue + Nuxt UI Conventions (monolith mode)
 
-## Replies
+- **Pages**: PascalCase, located in `resources/js/Pages/<Module>/<Action>.vue`.
+- **Components**: PascalCase files, kebab-case in templates. Project components in `resources/js/Components/`. Shared library components in `@wizardingcode/ui`.
+- **Composables**: `use*.ts` in `resources/js/Composables/`.
+- **State**: Pinia stores in `resources/js/Stores/`, namespaced.
+- **Modal vs Slideover**:
+  - `UModal` for short forms, confirmations (NEVER slideover for confirmations — fovory rule).
+  - `USlideover` for detail view + lateral edit.
+- **Dropzone**: ALWAYS `WcDropzone`, NEVER `<input type="file">`.
+- **Colors**: semantic tokens only (`text-default`, `bg-default`, etc.). NEVER raw Tailwind palette in components (`text-gray-900`, `bg-white`).
+- **Vendor lock**: files with `<!-- @vendor: -->` header are not editable without `/wc-vendor-upgrade`.
 
-- Be concise in your explanations - focus on what's important rather than explaining obvious details.
+## §7 — Forbidden Patterns (catalog)
 
-=== boost rules ===
+These trigger automatic PR rejection via lint, hooks, or reviewer. Replacements provided.
 
-# Laravel Boost
+| Pattern | Why | Replacement |
+|---|---|---|
+| `$guarded = []` | Mass-assignment (Bruno) | `$fillable = [...]` explicit |
+| `$request->all()` | Unvalidated input (Bruno) | FormRequest + `$request->validated()` |
+| Eloquent in controllers | Bypasses Service layer (Paulo) | Service or Action |
+| Inline `validate(['...'])` in controllers | Inconsistent (Paulo) | FormRequest class |
+| Secrets in `.env` for runtime config | Should be dynamic (André) | `AppSetting` encrypted |
+| `<input type="file">` directly | UX inconsistent (Ines) | `WcDropzone` |
+| `USlideover` for destructive confirms | UX rule (fovory) | `UModal` + `WcConfirmModal` |
+| Raw Tailwind colors (`text-gray-*`) | Dark mode breaks (Valentina) | Semantic tokens |
+| Vendor files without `@vendor:` header | Lock bypass (Ines) | Add header on port |
+| Skipping `composer arka:gate` | Quality gate bypass (Marta) | (does not exist) |
+| Untranslated user-facing strings | i18n breaks (Eduardo) | `__('key')` or `useT('key')` |
+| Mixed `auth('web')` and `auth('customer')` | Dual-auth contamination | Explicit guard always |
 
-## Tools
+## §8 — Skills Activation
 
-- Laravel Boost is an MCP server with tools designed specifically for this application. Prefer Boost tools over manual alternatives like shell commands or file reads.
-- Use `database-query` to run read-only queries against the database instead of writing raw SQL in tinker.
-- Use `database-schema` to inspect table structure before writing migrations or models.
-- Use `get-absolute-url` to resolve the correct scheme, domain, and port for project URLs. Always use this before sharing a URL with the user.
-- Use `browser-logs` to read browser logs, errors, and exceptions. Only recent logs are useful, ignore old entries.
+Skills under `.agents/skills/` (sym-linked into `.claude/skills/`, `.cursor/rules/`, `.codex/skills/`, `.gemini/skills/`) are project-domain skills. Activate the relevant skill whenever you work in that domain — don't wait until stuck.
 
-## Searching Documentation (IMPORTANT)
+Current skills:
+- `laravel-best-practices` — Eloquent, migrations, queue jobs, security, testing, validation patterns.
+- `wizardingcode-conventions` — WC-specific (dual auth, dynamic settings, promotion rule, forbidden patterns).
+- `arka-bridge` — ArkaOS constitution, mandatory flow, KB-first, quality gate enforcement.
+- `inertia-vue-nuxtui` — Inertia v3 + Vue 3 + Nuxt UI 4 patterns (skeleton in Plan 1, full in Plan 2).
+- `pest-browser-tdd` — Playwright via Pest browser TDD (skeleton in Plan 1, full in Plan 2).
+- `wizardingcode-ui-kb` — KB Obsidian UI/UX enforcement (skeleton in Plan 1, full in Plan 2).
 
-- Always use `search-docs` before making code changes. Do not skip this step. It returns version-specific docs based on installed packages automatically.
-- Pass a `packages` array to scope results when you know which packages are relevant.
-- Use multiple broad, topic-based queries: `['rate limiting', 'routing rate limiting', 'routing']`. Expect the most relevant results first.
-- Do not add package names to queries because package info is already shared. Use `test resource table`, not `filament 4 test resource table`.
+## §9 — Verification scripts
 
-### Search Syntax
+Do not create one-off verification scripts or `tinker` snippets when tests cover the functionality. Tests are the source of truth.
 
-1. Use words for auto-stemmed AND logic: `rate limit` matches both "rate" AND "limit".
-2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
-3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
-4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
+## §10 — Replies
 
-## Artisan
-
-- Run Artisan commands directly via the command line (e.g., `php artisan route:list`). Use `php artisan list` to discover available commands and `php artisan [command] --help` to check parameters.
-- Inspect routes with `php artisan route:list`. Filter with: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
-- Read configuration values using dot notation: `php artisan config:show app.name`, `php artisan config:show database.default`. Or read config files directly from the `config/` directory.
-
-## Tinker
-
-- Execute PHP in app context for debugging and testing code. Do not create models without user approval, prefer tests with factories instead. Prefer existing Artisan commands over custom tinker code.
-- Always use single quotes to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`
-  - Double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`
-
-=== php rules ===
-
-# PHP
-
-- Always use curly braces for control structures, even for single-line bodies.
-- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) { }`. Do not leave empty zero-parameter `__construct()` methods unless the constructor is private.
-- Use explicit return type declarations and type hints for all method parameters: `function isAccessible(User $user, ?string $path = null): bool`
-- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
-- Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
-- Use array shape type definitions in PHPDoc blocks.
-
-=== deployments rules ===
-
-# Deployment
-
-- Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
-
-=== laravel/core rules ===
-
-# Do Things the Laravel Way
-
-- Use `php artisan make:` commands to create new files (i.e. migrations, controllers, models, etc.). You can list available Artisan commands using `php artisan list` and check their parameters with `php artisan [command] --help`.
-- If you're creating a generic PHP class, use `php artisan make:class`.
-- Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
-
-### Model Creation
-
-- When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `php artisan make:model --help` to check the available options.
-
-## APIs & Eloquent Resources
-
-- For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
-
-## URL Generation
-
-- When generating links to other pages, prefer named routes and the `route()` function.
-
-## Testing
-
-- When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
-- Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
-- When creating tests, make use of `php artisan make:test [options] {name}` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
-
-## Vite Error
-
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
-
-=== pint/core rules ===
-
-# Laravel Pint Code Formatter
-
-- If you have modified any PHP files, you must run `vendor/bin/pint --dirty --format agent` before finalizing changes to ensure your code matches the project's expected style.
-- Do not run `vendor/bin/pint --test --format agent`, simply run `vendor/bin/pint --format agent` to fix any formatting issues.
-
-=== pest/core rules ===
-
-## Pest
-
-- This project uses Pest for testing. Create tests: `php artisan make:test --pest {name}`.
-- The `{name}` argument should not include the test suite directory. Use `php artisan make:test --pest SomeFeatureTest` instead of `php artisan make:test --pest Feature/SomeFeatureTest`.
-- Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
-- Do NOT delete tests without approval.
-
-</laravel-boost-guidelines>
+Be concise. Focus on what's important rather than explaining obvious details. Match the user's language. When in Portuguese, use European Portuguese (pt-PT).
