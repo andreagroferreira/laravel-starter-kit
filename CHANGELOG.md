@@ -4,6 +4,11 @@ All notable changes documented here. Format: [Keep a Changelog](https://keepacha
 
 ## [Unreleased — v1.0.0]
 
+### Plan 2: Dual Auth + Inertia/Vue/Nuxt UI Port (2026-05-20)
+
+**Changed**
+- Infection MSI thresholds raised: `minMsi 0 → 50`, `minCoveredMsi 0 → 70` (Plan 2 G2 staged ramp; Plan 3 → 65/80; Plan 5 CI gates at 75/85). `bin/arka-gate` keeps the mutation phase non-required locally (no pcov driver); CI in Plan 5 installs pcov and promotes it to required.
+
 ### Plan 1: Foundation & ArkaOS Integration (2026-05-19)
 
 **Added**
