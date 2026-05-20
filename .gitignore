@@ -38,4 +38,4 @@ Homestead.yaml
 .gemini/skills/*.bak.*
 .github/skills/*.bak.*
 .junie/skills/*.bak.*
-.kiro/skills/*.bak.*
+.kiro/skills/*.bak.*/tests/Browser/Screenshots/

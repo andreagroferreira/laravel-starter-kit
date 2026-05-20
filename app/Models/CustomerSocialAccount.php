@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Override;
@@ -21,17 +22,16 @@ use Override;
  * @property-read CarbonInterface $updated_at
  * @property-read Customer $customer
  */
+#[Fillable([
+    'customer_id',
+    'provider',
+    'provider_id',
+    'provider_token',
+    'provider_refresh_token',
+    'expires_at',
+])]
 final class CustomerSocialAccount extends Model
 {
-    protected $fillable = [
-        'customer_id',
-        'provider',
-        'provider_id',
-        'provider_token',
-        'provider_refresh_token',
-        'expires_at',
-    ];
-
     /**
      * @return BelongsTo<Customer, $this>
      */

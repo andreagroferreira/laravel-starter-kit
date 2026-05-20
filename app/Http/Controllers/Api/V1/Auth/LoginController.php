@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Actions\Auth\AuthenticateCustomer;
 use App\Http\Requests\Auth\Customer\LoginRequest;
 use App\Http\Resources\Customer\CustomerTokenResource;
+use App\Models\Customer;
 use Illuminate\Http\JsonResponse;
 
 final class LoginController
@@ -18,7 +19,7 @@ final class LoginController
 
         $customer = $authenticate($email, $password);
 
-        if ($customer === null) {
+        if (! $customer instanceof Customer) {
             return response()->json([
                 'type' => 'https://wizardingcode.io/errors/auth',
                 'title' => 'Invalid Credentials',

@@ -15,7 +15,7 @@ final class SocialRedirectController
     public function __invoke(string $provider): JsonResponse
     {
         Validator::make(['provider' => $provider], [
-            'provider' => 'required|in:google,apple,github,microsoft,facebook',
+            'provider' => ['required', 'in:google,apple,github,microsoft,facebook'],
         ])->validate();
 
         /** @var Provider $driver */

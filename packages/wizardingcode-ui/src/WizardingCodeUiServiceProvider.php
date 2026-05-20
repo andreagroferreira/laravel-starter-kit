@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WizardingCode\Ui;
 
 use Illuminate\Support\ServiceProvider;
+use Override;
 
 final class WizardingCodeUiServiceProvider extends ServiceProvider
 {
@@ -17,6 +18,7 @@ final class WizardingCodeUiServiceProvider extends ServiceProvider
         // If/when we need Blade-side renderers, register them here.
     }
 
+    #[Override]
     public function register(): void
     {
         // No bindings yet.

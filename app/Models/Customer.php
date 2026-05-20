@@ -8,6 +8,8 @@ use App\Enums\CustomerRole;
 use Carbon\CarbonInterface;
 use Database\Factories\CustomerFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -30,6 +32,17 @@ use Override;
  * @property-read CarbonInterface $updated_at
  * @property-read CarbonInterface|null $deleted_at
  */
+#[Fillable([
+    'name',
+    'email',
+    'password',
+    'avatar_url',
+    'role',
+])]
+#[Hidden([
+    'password',
+    'remember_token',
+])]
 final class Customer extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
@@ -39,19 +52,6 @@ final class Customer extends Authenticatable implements MustVerifyEmail
 
     use Notifiable;
     use SoftDeletes;
-
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'avatar_url',
-        'role',
-    ];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
 
     // Mirror DB column defaults so freshly created models have the expected
     // attribute values in memory without an explicit refresh. The parent

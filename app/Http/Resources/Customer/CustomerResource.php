@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace App\Http\Resources\Customer;
 
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Override;
 
 /**
- * @mixin \App\Models\Customer
+ * @mixin Customer
  */
 final class CustomerResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
      */
+    #[Override]
     public function toArray(Request $request): array
     {
         return [

@@ -57,7 +57,7 @@ final class AuthenticateCustomerSocial
                     'provider_id' => $providerId,
                     'provider_token' => $socialUser->token ?? null,
                     'provider_refresh_token' => $socialUser->refreshToken ?? null,
-                    'expires_at' => isset($socialUser->expiresIn) ? now()->addSeconds((int) $socialUser->expiresIn) : null,
+                    'expires_at' => property_exists($socialUser, 'expiresIn') && $socialUser->expiresIn !== null ? now()->addSeconds((int) $socialUser->expiresIn) : null,
                 ]);
             }
 
