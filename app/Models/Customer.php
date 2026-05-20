@@ -9,6 +9,7 @@ use Carbon\CarbonInterface;
 use Database\Factories\CustomerFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -71,5 +72,13 @@ final class Customer extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'role' => CustomerRole::class,
         ];
+    }
+
+    /**
+     * @return HasMany<CustomerSocialAccount, $this>
+     */
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(CustomerSocialAccount::class);
     }
 }
