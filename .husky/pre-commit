@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Sync multi-runtime agents (idempotent, fast)
+bin/arka-sync-agents > /dev/null 2>&1 || true
+
+# Run light quality checks only on staged PHP files
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.php$' || true)
+if [ -n "$STAGED_PHP" ]; then
+    echo "→ Pint --dirty"
+    vendor/bin/pint --dirty --format=agent --test || { echo "✗ Pint failed. Run: vendor/bin/pint --format=agent"; exit 1; }
+    echo "✓ Pint clean"
+fi
+
+# Secret scan via gitleaks (if installed)
+if command -v gitleaks >/dev/null 2>&1; then
+    echo "→ gitleaks staged"
+    gitleaks protect --no-banner --staged --redact || { echo "✗ Secrets detected in staged changes"; exit 1; }
+    echo "✓ No secrets in staged"
+fi
+
+# Absolute block on .env / keys / secret files
+FORBIDDEN=$(git diff --cached --name-only | grep -E '(^\.env$|^\.env\.[^e]|\.pem$|\.key$|id_rsa|^.*\.sqlite$|/storage/logs/)' || true)
+if [ -n "$FORBIDDEN" ]; then
+    echo "✗ Forbidden files in staged changes:"
+    echo "$FORBIDDEN"
+    echo "Remove with: git restore --staged <file>"
+    exit 1
+fi
+
+exit 0
