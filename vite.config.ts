@@ -1,6 +1,7 @@
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
+import ui from '@nuxt/ui/vite';
 import path from 'node:path';
 import {defineConfig} from 'vite-plus';
 
@@ -44,6 +45,7 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
+        ui(),
     ],
     resolve: {
         alias: {
