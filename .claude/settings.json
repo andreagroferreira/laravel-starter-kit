@@ -27,6 +27,7 @@
             { "command": ".claude/hooks/session-start.sh" }
         ],
         "PreToolUse": [
+            { "matcher": { "tool": "Write", "file_path_regex": "(resources/js/Components|packages/wizardingcode-ui/resources/components)/.*\\.vue$" }, "command": ".claude/hooks/pre-component-create.sh" },
             { "matcher": { "tool": "Bash", "command_regex": "^(git\\s+(add|commit|push)|gh\\s+(pr|repo))" }, "command": ".claude/hooks/pre-tool-use-git.sh" },
             { "matcher": { "tool": "Bash" }, "command": ".claude/hooks/pre-tool-use-bash.sh" },
             { "matcher": { "tool": "Edit" }, "command": ".claude/hooks/pre-tool-use-edit.sh" },
