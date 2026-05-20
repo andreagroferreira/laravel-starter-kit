@@ -1,5 +1,7 @@
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
+import vue from '@vitejs/plugin-vue';
+import path from 'node:path';
 import {defineConfig} from 'vite-plus';
 
 export default defineConfig({
@@ -29,9 +31,24 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: ["resources/css/app.css", "resources/js/app.js"],
+            input: ['resources/js/app.ts', 'resources/css/app.css'],
+            ssr: 'resources/js/ssr.ts',
             refresh: true,
+        }),
+        vue({
+            template: {
+                transformAssetUrls: {
+                    base: null,
+                    includeAbsolute: false,
+                },
+            },
         }),
         tailwindcss(),
     ],
+    resolve: {
+        alias: {
+            '@': path.resolve(__dirname, 'resources/js'),
+            '@wizardingcode/ui': path.resolve(__dirname, 'packages/wizardingcode-ui/resources/components'),
+        },
+    },
 });
