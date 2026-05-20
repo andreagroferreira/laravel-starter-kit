@@ -1,25 +1,30 @@
 ---
 name: pest-browser-tdd
-description: Playwright via Pest 5 browser plugin for E2E tests in WC boilerplate monolith mode. Activate for tests/Browser/. Full content lands in Plan 2.
+description: Playwright via Pest 5 browser plugin for E2E tests in WC boilerplate monolith mode. Apply this skill when writing tests under tests/Browser/ or when a UI flow has more than 2 user actions. Covers 3-viewport mandate, a11y assertions, Inertia visit patterns, and Pest skip discipline.
 ---
 
-# Pest Browser TDD - Skeleton
+# Pest Browser TDD
 
-Full content arrives in Plan 2.
+E2E test discipline for the WC boilerplate.
 
-## Surface area (placeholder)
+## When to invoke
 
-- Pest browser plugin (`pestphp/pest-plugin-browser`) wraps Playwright.
-- 3 viewport scenarios: mobile (375), tablet (820), desktop (1440).
-- Headless by default; `--browser` for visual debug.
-- Screenshots on failure in `tests/Browser/Output/`.
+- Adding any new flow with more than 2 user actions (login, register, checkout, multi-step form).
+- Writing or modifying files under `tests/Browser/`.
+- Adding visual regression baselines (separate from Histoire stories).
+- Auditing existing E2E coverage.
 
-## Hard rules (forward declaration)
+## Rules
 
-- Browser test required for any UI flow with > 2 user actions.
-- 3 viewports mandatory.
-- a11y assertion (axe-core via Playwright) per page.
+- @rules/three-viewports.md — every browser test runs at mobile/tablet/desktop.
+- @rules/skip-discipline.md — skip with explicit reason when Playwright unavailable.
+- @rules/inertia-flows.md — how to test Inertia visits + page transitions.
 
-## Status
+## Workflow
 
-Plan 1: skeleton. Plan 2: full TDD patterns + viewport templates.
+1. Write the failing test FIRST (TDD).
+2. Test at desktop viewport — get it green.
+3. Add mobile + tablet variants.
+4. Add a11y assertion (axe-core via Playwright).
+5. Run locally if Playwright installed; otherwise `->skip()` with reason.
+6. Plan 5 CI installs Playwright and runs all skipped tests.

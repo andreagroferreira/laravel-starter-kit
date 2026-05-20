@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # WizardingCode Quality Gate — composer arka:gate
-# 9-phase pipeline. Fails fast. Outputs storage/arka/gate-report.json.
+# 10-phase pipeline. Fails fast. Outputs storage/arka/gate-report.json.
 
 set -uo pipefail
 
@@ -22,7 +22,7 @@ run_phase() {
 
     phase_id=$((phase_id + 1))
     local phase_start=$(date +%s)
-    printf "[%d/9] %s ..." "$phase_id" "$label"
+    printf "[%d/10] %s ..." "$phase_id" "$label"
 
     set +e
     eval "$cmd" >/dev/null 2>"$REPORT_DIR/last-error.log"
@@ -65,6 +65,11 @@ run_phase "vitest"        "Vitest (Vue components)"          "[ -f vite.config.t
 # warnings are tracked separately. nunomaduro/pao → laravel/pao migration is
 # scheduled (CHANGELOG / Plan 1 F2 notes); --abandoned=ignore until then.
 run_phase "security"      "Security audit"                   "composer audit --no-interaction --abandoned=ignore"
+# Visual regression (Plan 2 F3 setup, Plan 5 CI enables): runs Playwright
+# against Histoire stories with a 2% diff threshold per spec §6.6.E.3.
+# Non-required locally — baselines may not exist until first --update-snapshots
+# run, and chromium browser install is optional during development.
+run_phase "visual"        "Playwright visual regression"     "[ -d tests/Visual/light-dark.spec.ts-snapshots ] && bin/wc-visual-regression --reporter=list || true" "false"
 
 phases_results="${phases_results}]"
 END_TIME=$(date +%s)

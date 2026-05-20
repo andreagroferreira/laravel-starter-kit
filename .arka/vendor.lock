@@ -1,0 +1,57 @@
+vendor:
+  nuxt-ui-templates/dashboard-vue:
+    sha: 5ace1923f57a10b2209abcba3869008f59f32c37
+    locked_at: 2026-05-19
+    locked_by: ines-frontend
+    files:
+      - resources/js/Layouts/BackofficeLayout.vue
+      - resources/js/Pages/Dashboard/Index.vue
+      - resources/js/Pages/Inbox/Index.vue
+      - resources/js/Pages/Customers/Index.vue
+      - resources/js/Pages/Settings/Index.vue
+      - resources/js/Pages/Settings/Members.vue
+      - resources/js/Pages/Settings/Notifications.vue
+      - resources/js/Pages/Settings/Security.vue
+      - resources/js/Components/Backoffice/Header/UserMenu.vue
+      - resources/js/Components/Backoffice/Header/TeamsMenu.vue
+      - resources/js/Components/Backoffice/Header/NotificationsSlideover.vue
+      - resources/js/Components/Home/Chart.vue
+      - resources/js/Components/Home/DateRangePicker.vue
+      - resources/js/Components/Home/PeriodSelect.vue
+      - resources/js/Components/Home/Sales.vue
+      - resources/js/Components/Home/Stats.vue
+      - resources/js/Components/Inbox/List.vue
+      - resources/js/Components/Inbox/Mail.vue
+      - resources/js/Components/Customers/AddModal.vue
+      - resources/js/Components/Customers/DeleteModal.vue
+      - resources/js/Components/Settings/MembersList.vue
+      - resources/js/Composables/useDashboard.ts
+      - resources/js/types/index.d.ts
+      - resources/js/utils/index.ts
+      - resources/css/app.css
+mapping:
+  resources/js/Layouts/BackofficeLayout.vue: src/layouts/default.vue
+  resources/js/Pages/Dashboard/Index.vue: src/pages/index.vue
+  resources/js/Pages/Inbox/Index.vue: src/pages/inbox.vue
+  resources/js/Pages/Customers/Index.vue: src/pages/customers.vue
+  resources/js/Pages/Settings/Index.vue: src/pages/settings/index.vue
+  resources/js/Pages/Settings/Members.vue: src/pages/settings/members.vue
+  resources/js/Pages/Settings/Notifications.vue: src/pages/settings/notifications.vue
+  resources/js/Pages/Settings/Security.vue: src/pages/settings/security.vue
+  resources/js/Components/Backoffice/Header/UserMenu.vue: src/components/UserMenu.vue
+  resources/js/Components/Backoffice/Header/TeamsMenu.vue: src/components/TeamsMenu.vue
+  resources/js/Components/Backoffice/Header/NotificationsSlideover.vue: src/components/NotificationsSlideover.vue
+  resources/js/Components/Home/Chart.vue: src/components/home/HomeChart.vue
+  resources/js/Components/Home/DateRangePicker.vue: src/components/home/HomeDateRangePicker.vue
+  resources/js/Components/Home/PeriodSelect.vue: src/components/home/HomePeriodSelect.vue
+  resources/js/Components/Home/Sales.vue: src/components/home/HomeSales.vue
+  resources/js/Components/Home/Stats.vue: src/components/home/HomeStats.vue
+  resources/js/Components/Inbox/List.vue: src/components/inbox/InboxList.vue
+  resources/js/Components/Inbox/Mail.vue: src/components/inbox/InboxMail.vue
+  resources/js/Components/Customers/AddModal.vue: src/components/customers/CustomersAddModal.vue
+  resources/js/Components/Customers/DeleteModal.vue: src/components/customers/CustomersDeleteModal.vue
+  resources/js/Components/Settings/MembersList.vue: src/components/settings/SettingsMembersList.vue
+  resources/js/Composables/useDashboard.ts: src/composables/useDashboard.ts
+  resources/js/types/index.d.ts: src/types/index.d.ts
+  resources/js/utils/index.ts: src/utils/index.ts
+  resources/css/app.css: src/assets/css/main.css

@@ -12,12 +12,13 @@ return [
     'username' => 'email',
     'email' => 'email',
     'views' => true,
-    'home' => '/home',
-    'prefix' => '',
+    'home' => '/admin',
+    'prefix' => 'admin',
     'domain' => null,
-    'lowercase_usernames' => false,
+    'lowercase_usernames' => true,
     'limiters' => [
-        'login' => null,
+        'login' => 'login',
+        'two-factor' => 'two-factor',
         'passkeys' => null,
     ],
     'paths' => [
@@ -77,12 +78,16 @@ return [
         'timeout' => 60000,
     ],
     'features' => [
-        Features::registration(),
+        // Staff are invited only — registration disabled.
         Features::resetPasswords(),
         Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),
-        Features::twoFactorAuthentication(),
+        Features::twoFactorAuthentication([
+            'confirm' => true,
+            'confirmPassword' => true,
+            'window' => 0,
+        ]),
         Features::passkeys(),
     ],
 ];

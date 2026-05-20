@@ -6,23 +6,45 @@
     "dev": "vp dev",
     "lint": "NODE_OPTIONS='--experimental-strip-types' vp fmt resources/",
     "test:lint": "NODE_OPTIONS='--experimental-strip-types' vp fmt --check resources/",
+    "story:dev": "histoire dev",
+    "story:build": "histoire build",
     "prepare": "husky"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.1",
     "@commitlint/config-conventional": "^21.0.1",
+    "@histoire/plugin-vue": "^1.0.0-beta.1",
+    "@playwright/test": "^1.50",
     "@tailwindcss/vite": "^4.3.0",
+    "@testing-library/vue": "^8",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/test-utils": "^2.4",
     "concurrently": "^9.2.1",
+    "histoire": "1.0.0-beta.1",
     "husky": "^9.1.7",
     "laravel-vite-plugin": "^3.1.0",
     "npm-check-updates": "^22.2.0",
     "playwright": "^1.60.0",
     "tailwindcss": "^4.3.0",
+    "typescript": "^5.6",
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vite-plus": "latest"
+    "vite-plus": "latest",
+    "vitest": "^0.1.22",
+    "vue-router": "^4",
+    "vue-tsc": "^3.3.1"
   },
   "overrides": {
     "vite": "npm:@voidzero-dev/vite-plus-core@latest",
     "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+  },
+  "dependencies": {
+    "@inertiajs/vue3": "^2.0",
+    "@nuxt/ui": "^4.0",
+    "@unovis/vue": "^1",
+    "axios": "^1.7",
+    "date-fns": "^4",
+    "pinia": "^2.2",
+    "vue": "^3.5",
+    "zod": "^3"
   }
 }

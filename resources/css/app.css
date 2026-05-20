@@ -1,14 +1,22 @@
+/*! @vendor: nuxt-ui-templates/dashboard-vue@5ace1923f57a10b2209abcba3869008f59f32c37 — partial vendor port. Tailwind v4 @source kept from project. */
 @import 'tailwindcss';
+@import '@nuxt/ui';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.ts';
 @source '../**/*.vue';
+@source '../../packages/wizardingcode-ui/resources/components/**/*.vue';
 
 @theme {
     --font-sans:
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
+}
+
+.dark {
+    --ui-primary: var(--ui-color-primary-500);
 }
