@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# Diff local vendor-locked files vs upstream nuxt-ui-templates/dashboard-vue@<SHA>.
+# Reads .arka/vendor.lock for the SHA and file mapping.
+# Portable: works with macOS Bash 3.2 (no associative arrays).
+
+set -uo pipefail
+
+LOCKFILE=".arka/vendor.lock"
+if [ ! -f "$LOCKFILE" ]; then
+    echo "error: $LOCKFILE not found" >&2
+    exit 2
+fi
+
+SHA=$(awk '/^    sha:/ {print $2; exit}' "$LOCKFILE")
+if [ -z "$SHA" ]; then
+    echo "error: could not parse sha from $LOCKFILE" >&2
+    exit 2
+fi
+
+echo "Comparing local vendor files against upstream@$SHA"
+echo
+
+TMPDIR=$(mktemp -d)
+trap "rm -rf '$TMPDIR'" EXIT
+
+# Clone upstream at the pinned SHA (prefer gh CLI, fall back to git)
+CLONE_OK=0
+if command -v gh >/dev/null 2>&1; then
+    if gh repo clone nuxt-ui-templates/dashboard-vue "$TMPDIR/upstream" -- --quiet --no-tags 2>/dev/null; then
+        CLONE_OK=1
+    fi
+fi
+if [ "$CLONE_OK" -eq 0 ]; then
+    if git clone --quiet --no-tags https://github.com/nuxt-ui-templates/dashboard-vue.git "$TMPDIR/upstream" 2>/dev/null; then
+        CLONE_OK=1
+    fi
+fi
+if [ "$CLONE_OK" -eq 0 ]; then
+    echo "error: failed to clone upstream repo (tried gh CLI and git)" >&2
+    exit 3
+fi
+
+(cd "$TMPDIR/upstream" && git checkout --quiet "$SHA" 2>/dev/null) || {
+    echo "error: failed to checkout upstream SHA $SHA" >&2
+    exit 3
+}
+
+# Parse mapping into two parallel arrays (Bash 3.2-compatible)
+LOCAL_PATHS=()
+UPSTREAM_PATHS=()
+parsing=0
+while IFS= read -r line; do
+    if [ "$line" = "mapping:" ]; then
+        parsing=1
+        continue
+    fi
+    if [ "$parsing" -eq 1 ]; then
+        if [[ "$line" =~ ^[[:space:]]+([^:]+):[[:space:]]+(.+)$ ]]; then
+            LOCAL_PATHS+=("${BASH_REMATCH[1]}")
+            UPSTREAM_PATHS+=("${BASH_REMATCH[2]}")
+        fi
+    fi
+done < "$LOCKFILE"
+
+TOTAL=${#LOCAL_PATHS[@]}
+if [ "$TOTAL" -eq 0 ]; then
+    echo "warn: no mappings parsed from $LOCKFILE" >&2
+    exit 1
+fi
+
+DIFF_COUNT=0
+MISSING_COUNT=0
+MATCH_COUNT=0
+i=0
+while [ "$i" -lt "$TOTAL" ]; do
+    LOCAL="${LOCAL_PATHS[$i]}"
+    UPSTREAM="${UPSTREAM_PATHS[$i]}"
+    i=$((i + 1))
+
+    if [ ! -f "$LOCAL" ]; then
+        echo "? $LOCAL (LOCAL MISSING; upstream: $UPSTREAM)"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
+        continue
+    fi
+    if [ ! -f "$TMPDIR/upstream/$UPSTREAM" ]; then
+        echo "? $UPSTREAM (UPSTREAM MISSING; local: $LOCAL)"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
+        continue
+    fi
+    # Strip vendor headers (lines containing '@vendor:') from local before diffing
+    LOCAL_CONTENT=$(grep -v '@vendor:' "$LOCAL")
+    UPSTREAM_CONTENT=$(cat "$TMPDIR/upstream/$UPSTREAM")
+    if [ "$LOCAL_CONTENT" != "$UPSTREAM_CONTENT" ]; then
+        echo "X $LOCAL (diverges from upstream $UPSTREAM)"
+        DIFF_COUNT=$((DIFF_COUNT + 1))
+    else
+        MATCH_COUNT=$((MATCH_COUNT + 1))
+    fi
+done
+
+echo
+echo "Summary: ${MATCH_COUNT} match, ${DIFF_COUNT} diverge, ${MISSING_COUNT} missing (of ${TOTAL} total)"
+if [ "$DIFF_COUNT" -eq 0 ] && [ "$MISSING_COUNT" -eq 0 ]; then
+    echo "OK: All ${TOTAL} vendor files match upstream@$SHA."
+    exit 0
+elif [ "$MISSING_COUNT" -gt 0 ] && [ "$DIFF_COUNT" -eq 0 ]; then
+    echo "warn: $MISSING_COUNT file(s) missing locally (Task B2 ports them)."
+    exit 0
+else
+    echo "$DIFF_COUNT file(s) diverge from upstream. Run /wc-vendor-upgrade to reconcile."
+    exit 1
+fi
