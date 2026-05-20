@@ -1,3 +1,21 @@
+<p align="center">
+    <strong>Boilerplate WizardingCode</strong> — ArkaOS-native Laravel starter
+</p>
+
+<p align="center">
+    PHP 8.4 · Laravel 13 · Inertia v3 · Vue 3 · Nuxt UI 4 · Pest 5 · Pint · Rector · PHPStan L9
+</p>
+
+> **Status:** v1.0.0-draft. Foundation & ArkaOS integration (Plan 1) implemented. Full v1.0 release follows Plan 2-5.
+>
+> **See:** `docs/superpowers/specs/2026-05-19-boilerplate-wizardingcode-design.md` for the full design specification.
+
+## ArkaOS
+
+This boilerplate is part of the ArkaOS ecosystem. See `CLAUDE.md` for the constitution and squad routing. Run `composer arka:gate` before declaring any task done.
+
+---
+
 - Blade (this project) version: **[github.com/nunomaduro/laravel-starter-kit](https://github.com/nunomaduro/laravel-starter-kit)**
 - Inertia & React version: **[github.com/nunomaduro/laravel-starter-kit-inertia-react](https://github.com/nunomaduro/laravel-starter-kit-inertia-react)**
 - Inertia & Vue version: **[github.com/nunomaduro/laravel-starter-kit-inertia-vue](https://github.com/nunomaduro/laravel-starter-kit-inertia-vue)**

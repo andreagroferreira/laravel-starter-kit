@@ -2,14 +2,28 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Sleep;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-pest()->extend(TestCase::class)
+/*
+|--------------------------------------------------------------------------
+| WizardingCode boilerplate — Pest configuration.
+|
+| RefreshDatabase by default. SQLite in-memory in phpunit.xml for speed.
+| Use ->todo() to mark known-pending tests. Use ->skip() with explanation
+| for environment-bound flakiness.
+|--------------------------------------------------------------------------
+*/
+
+pest()
+    ->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->beforeEach(function (): void {
         Str::createRandomStringsNormally();
@@ -20,9 +34,56 @@ pest()->extend(TestCase::class)
 
         $this->freezeTime();
     })
-    ->in('Browser', 'Feature', 'Unit');
+    ->in('Feature');
+
+pest()
+    ->extend(TestCase::class)
+    ->in('Unit');
+
+pest()
+    ->extend(TestCase::class)
+    ->in('Browser');
+
+/*
+|--------------------------------------------------------------------------
+| Custom expectations
+|--------------------------------------------------------------------------
+*/
 
 expect()->extend('toBeOne', fn () => $this->toBe(1));
+
+/**
+ * @param array<int, string> $expected
+ */
+expect()->extend('toBeFillable', function (array $expected): void {
+    /** @var Model $model */
+    $model = $this->value;
+    expect($model->getFillable())->toBe($expected);
+});
+
+/**
+ * @param array<int, string> $expected
+ */
+expect()->extend('toBeGuarded', function (array $expected): void {
+    /** @var Model $model */
+    $model = $this->value;
+    expect($model->getGuarded())->toBe($expected);
+});
+
+/*
+|--------------------------------------------------------------------------
+| Helpers
+|--------------------------------------------------------------------------
+*/
+
+function asStaff(): User
+{
+    /** @var User $user */
+    $user = User::factory()->create();
+    Auth::guard('web')->login($user);
+
+    return $user;
+}
 
 function something(): void
 {

@@ -1,0 +1,42 @@
+{
+    "name": "wizardingcode/arka-bridge",
+    "description": "ArkaOS integration bridge for WizardingCode boilerplate - exposes constitution, sync command, telemetry.",
+    "type": "library",
+    "license": "MIT",
+    "version": "1.0.0",
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^13.0",
+        "illuminate/console": "^13.0"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^11.0",
+        "pestphp/pest": "^5.0",
+        "pestphp/pest-plugin-laravel": "^5.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WizardingCode\\ArkaBridge\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WizardingCode\\ArkaBridge\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "WizardingCode\\ArkaBridge\\ArkaBridgeServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

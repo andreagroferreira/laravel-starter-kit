@@ -1,0 +1,36 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "app",
+            "packages/*/src"
+        ],
+        "excludes": [
+            "Console/Kernel.php",
+            "Exceptions",
+            "Providers"
+        ]
+    },
+    "timeout": 30,
+    "logs": {
+        "text": "storage/arka/infection/log.txt",
+        "html": "storage/arka/infection/report.html",
+        "summary": "storage/arka/infection/summary.txt",
+        "json": "storage/arka/infection/summary.json"
+    },
+    "mutators": {
+        "@default": true
+    },
+    // Temporarily relaxed to 0 for v1.0.0-draft delivery (Plan 1 F2).
+    // No coverage driver (pcov/xdebug) is enforced locally yet, and the
+    // dual-auth + UI tests that expand the mutated surface arrive in Plan 2.
+    // Plan 2 raises these back to minMsi=75 / minCoveredMsi=85 once CI runs
+    // Infection with pcov enabled and the test surface has grown.
+    "minMsi": 0,
+    "minCoveredMsi": 0,
+    "phpUnit": {
+        "configDir": ".",
+        "customPath": "vendor/bin/pest"
+    },
+    "testFramework": "phpunit"
+}

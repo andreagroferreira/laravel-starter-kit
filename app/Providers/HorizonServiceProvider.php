@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Providers;
+
+use Illuminate\Support\Facades\Gate;
+use Laravel\Horizon\HorizonApplicationServiceProvider;
+use Override;
+
+final class HorizonServiceProvider extends HorizonApplicationServiceProvider
+{
+    /**
+     * Bootstrap any application services.
+     */
+    #[Override]
+    public function boot(): void
+    {
+        parent::boot();
+
+        // Horizon::routeSmsNotificationsTo('15556667777');
+        // Horizon::routeMailNotificationsTo('example@example.com');
+        // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
+    }
+
+    /**
+     * Register the Horizon gate.
+     *
+     * This gate determines who can access Horizon in non-local environments.
+     */
+    #[Override]
+    protected function gate(): void
+    {
+        Gate::define('viewHorizon', function (?object $user = null): bool {
+            $email = is_object($user) && property_exists($user, 'email') ? $user->email : null;
+
+            /** @var array<int, string> $allowed */
+            $allowed = [
+                //
+            ];
+
+            return is_string($email) && in_array($email, $allowed, true);
+        });
+    }
+}

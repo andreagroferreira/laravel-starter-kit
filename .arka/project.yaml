@@ -1,0 +1,17 @@
+name: boilerplate-wizardingcode
+type: boilerplate
+ecosystem: wizardingcode
+version: 1.0.0-draft
+owner_squad:
+  - paulo-backend
+  - ines-frontend
+  - francisca-tech
+  - bruno-security
+veto_holder: andre
+arkaos_url: https://arka.wizardingcode.io/projects/boilerplate-wizardingcode
+obsidian_path: "Projects/Boilerplate WizardingCode"
+github_repo: WizardingCode/boilerplate-wizardingcode
+release_cadence:
+  patch: rolling
+  minor: monthly
+  major: quarterly

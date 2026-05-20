@@ -9,26 +9,55 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.5.0",
-        "laravel/framework": "^13.5.0",
-        "nunomaduro/essentials": "^1.2.0"
+        "bepsvpt/secure-headers": "^7.5",
+        "dedoc/scramble": "^0.13.23",
+        "laravel/ai": "^0.6.8",
+        "laravel/fortify": "^1.37.2",
+        "laravel/framework": "^13.9.0",
+        "laravel/horizon": "^5.46",
+        "laravel/pennant": "^1.23",
+        "laravel/pulse": "^1.7.3",
+        "laravel/reverb": "^1.10.2",
+        "laravel/sanctum": "^4.3.2",
+        "laravel/scout": "^10.25",
+        "laravel/socialite": "^5.27",
+        "league/flysystem-aws-s3-v3": "^3.34",
+        "nunomaduro/essentials": "^1.2.0",
+        "php": "^8.4.0",
+        "sentry/sentry-laravel": "^4.25.1",
+        "spatie/laravel-activitylog": "^4.12.3",
+        "spatie/laravel-data": "^4.23",
+        "spatie/laravel-medialibrary": "^11.22.1",
+        "spatie/laravel-permission": "^6.25",
+        "spatie/laravel-query-builder": "^6.4.4",
+        "wizardingcode/arka-bridge": "^1.0"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "packages/*",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require-dev": {
         "driftingly/rector-laravel": "^2.3.0",
         "fakerphp/faker": "^1.24.1",
+        "infection/infection": "^0.33.2",
         "larastan/larastan": "^3.9.6",
-        "laravel/boost": "^2.4.4",
+        "laravel/boost": "^2.4.7",
         "laravel/pail": "^1.2.6",
-        "laravel/pint": "^1.29.0",
+        "laravel/pint": "^1.29.1",
         "laravel/tinker": "^3.0.2",
         "mockery/mockery": "^1.6.12",
-        "nunomaduro/collision": "^8.9.3",
-        "nunomaduro/pao": "^1.0.2",
+        "nunomaduro/collision": "^8.9.4",
+        "nunomaduro/pao": "^1.0.6",
         "pestphp/pest": "^5.0",
         "pestphp/pest-plugin-browser": "^5.0",
         "pestphp/pest-plugin-laravel": "^5.0",
         "pestphp/pest-plugin-type-coverage": "^5.0",
-        "rector/rector": "^2.4.2",
+        "rector/rector": "^2.4.3",
         "roave/security-advisories": "dev-latest"
     },
     "autoload": {
@@ -78,24 +107,33 @@
             "bunx npm-check-updates -u"
         ],
         "lint": [
-            "rector",
-            "pint --parallel",
+            "vendor/bin/rector --no-progress-bar",
+            "vendor/bin/pint --parallel --format=agent",
             "bun run lint"
         ],
-        "test:type-coverage": "pest --type-coverage --min=100",
         "test:lint": [
-            "pint --parallel --test",
-            "rector --dry-run",
+            "vendor/bin/pint --parallel --test --format=agent",
+            "vendor/bin/rector --dry-run --no-progress-bar",
             "bun run test:lint"
         ],
-        "test:unit": "XDEBUG_MODE=\"coverage\" pest --parallel --coverage --exactly=100.0",
-        "test:types": "phpstan",
+        "test:types": "vendor/bin/phpstan analyse --no-progress --memory-limit=2G",
+        "test:type-coverage": "vendor/bin/pest --type-coverage --min=100",
+        "test:unit": "vendor/bin/pest --parallel --coverage --min=85",
+        "test:browser": "vendor/bin/pest --filter=Browser",
+        "test:mutation": "vendor/bin/infection --threads=4 --no-progress --show-mutations",
+        "test:security": [
+            "composer audit --no-interaction",
+            "bun audit",
+            "bin/arka-gate-security"
+        ],
         "test": [
             "@test:type-coverage",
             "@test:unit",
             "@test:lint",
             "@test:types"
-        ]
+        ],
+        "arka:gate": "bin/arka-gate",
+        "arka:sync": "bin/arka-sync-agents"
     },
     "extra": {
         "laravel": {
@@ -107,6 +145,7 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
+            "infection/extension-installer": true,
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
         }
