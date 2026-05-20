@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Customer;
 use App\Models\User;
+use App\Policies\CustomerPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -24,6 +26,7 @@ final class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Customer::class, CustomerPolicy::class);
 
         RateLimiter::for('login', static function (Request $request): Limit {
             $emailInput = $request->input('email');
