@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a7f774a86a83fbc2bfb750c24abe27a8",
+    "content-hash": "0ef1ba0716abd0e2849db11e0f49adc0",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -11248,6 +11248,51 @@
                 "source": "https://github.com/webmozarts/assert/tree/2.3.0"
             },
             "time": "2026-04-11T10:33:05+00:00"
+        },
+        {
+            "name": "wizardingcode/arka-bridge",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/wizardingcode-arka-bridge",
+                "reference": "a3cf89d5577b550858181dcb3e9a09b863ebcc17"
+            },
+            "require": {
+                "illuminate/console": "^13.0",
+                "illuminate/support": "^13.0",
+                "php": "^8.4"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^11.0",
+                "pestphp/pest": "^5.0",
+                "pestphp/pest-plugin-laravel": "^5.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "WizardingCode\\ArkaBridge\\ArkaBridgeServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "WizardingCode\\ArkaBridge\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "WizardingCode\\ArkaBridge\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "ArkaOS integration bridge for WizardingCode boilerplate - exposes constitution, sync command, telemetry.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         }
     ],
     "packages-dev": [
