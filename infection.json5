@@ -1,0 +1,31 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "app",
+            "packages/*/src"
+        ],
+        "excludes": [
+            "Console/Kernel.php",
+            "Exceptions",
+            "Providers"
+        ]
+    },
+    "timeout": 30,
+    "logs": {
+        "text": "storage/arka/infection/log.txt",
+        "html": "storage/arka/infection/report.html",
+        "summary": "storage/arka/infection/summary.txt",
+        "json": "storage/arka/infection/summary.json"
+    },
+    "mutators": {
+        "@default": true
+    },
+    "minMsi": 75,
+    "minCoveredMsi": 85,
+    "phpUnit": {
+        "configDir": ".",
+        "customPath": "vendor/bin/pest"
+    },
+    "testFramework": "phpunit"
+}
