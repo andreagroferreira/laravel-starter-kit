@@ -6,6 +6,8 @@
     "dev": "vp dev",
     "lint": "NODE_OPTIONS='--experimental-strip-types' vp fmt resources/",
     "test:lint": "NODE_OPTIONS='--experimental-strip-types' vp fmt --check resources/",
+    "story:dev": "histoire dev",
+    "story:build": "histoire build",
     "prepare": "husky"
   },
   "devDependencies": {
