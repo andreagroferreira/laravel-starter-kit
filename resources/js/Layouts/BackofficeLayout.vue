@@ -8,6 +8,9 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 import TeamsMenu from '@/Components/Backoffice/Header/TeamsMenu.vue'
 import UserMenu from '@/Components/Backoffice/Header/UserMenu.vue'
 import NotificationsSlideover from '@/Components/Backoffice/Header/NotificationsSlideover.vue'
+// WC: Plan 2 F1 — cookie-persisted color mode switcher (non-vendor addition)
+import ColorModeSwitcher from '@/Components/Backoffice/Header/ColorModeSwitcher.vue'
+// /WC
 
 const toast = useToast()
 const page = usePage()
@@ -153,6 +156,11 @@ if (cookie.value !== 'accepted') {
       </template>
 
       <template #footer="{ collapsed }">
+        <!-- WC: Plan 2 F1 — ColorModeSwitcher (non-vendor addition) -->
+        <div v-if="!collapsed" class="flex justify-end">
+          <ColorModeSwitcher />
+        </div>
+        <!-- /WC -->
         <UserMenu :collapsed="collapsed" />
       </template>
     </UDashboardSidebar>

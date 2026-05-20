@@ -1,11 +1,11 @@
 import { onMounted, ref, watch, type Ref } from 'vue';
 
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type ColorMode = 'light' | 'dark' | 'system';
 
 const COOKIE_NAME = 'color-mode';
 const COOKIE_MAX_AGE_DAYS = 365;
 
-const mode = ref<ThemeMode>('system');
+const mode = ref<ColorMode>('system');
 const resolved = ref<'light' | 'dark'>('light');
 
 function readCookie(name: string): string | null {
@@ -39,7 +39,7 @@ function prefersDark(): boolean {
     );
 }
 
-function applyMode(m: ThemeMode): void {
+function applyMode(m: ColorMode): void {
     const dark = m === 'dark' || (m === 'system' && prefersDark());
 
     resolved.value = dark ? 'dark' : 'light';
@@ -49,25 +49,55 @@ function applyMode(m: ThemeMode): void {
     }
 }
 
-function setMode(m: ThemeMode): void {
+function setMode(m: ColorMode): void {
     mode.value = m;
     writeCookie(COOKIE_NAME, m, COOKIE_MAX_AGE_DAYS);
     applyMode(m);
 }
 
+let mediaQueryWired = false;
+
 /**
- * Standalone color-mode helper for the @wizardingcode/ui package.
- *
- * Mirrors the algorithm in `resources/js/Composables/useColorMode.ts` so the
- * package can be consumed without depending on the host application. Plan 5
- * may consolidate these once the package has its own build entrypoint.
+ * Initialise color mode from the cookie BEFORE the first render. Called from
+ * `app.ts` to avoid the dark/light flash on Inertia SSR or hydration.
  */
-export function useTheme(): {
-    mode: Ref<ThemeMode>;
+export function setupColorMode(): void {
+    const fromCookie = readCookie(COOKIE_NAME);
+    if (
+        fromCookie === 'light' ||
+        fromCookie === 'dark' ||
+        fromCookie === 'system'
+    ) {
+        mode.value = fromCookie;
+    }
+
+    applyMode(mode.value);
+
+    if (
+        !mediaQueryWired &&
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function'
+    ) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        mq.addEventListener('change', () => {
+            if (mode.value === 'system') {
+                applyMode('system');
+            }
+        });
+        mediaQueryWired = true;
+    }
+}
+
+/**
+ * Composable for components/pages. Returns reactive mode + resolved + setter.
+ */
+export function useColorMode(): {
+    mode: Ref<ColorMode>;
     resolved: Ref<'light' | 'dark'>;
-    setMode: (m: ThemeMode) => void;
+    setMode: (m: ColorMode) => void;
 } {
     onMounted(() => {
+        // Re-apply on mount in case the cookie was changed in another tab.
         applyMode(mode.value);
     });
 

@@ -6,8 +6,13 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ui from '@nuxt/ui/vue-plugin';
 import { createPinia } from 'pinia';
 import { createApp, h, type DefineComponent } from 'vue';
+import { setupColorMode } from '@/Composables/useColorMode';
 
 const appName = import.meta.env.VITE_APP_NAME || 'WizardingCode';
+
+// Apply persisted color mode (cookie) before Inertia mounts so the
+// `dark` class on <html> stays in sync with what SSR rendered.
+setupColorMode();
 
 void createInertiaApp({
     title: (title) => `${title} · ${appName}`,
