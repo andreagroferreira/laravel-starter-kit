@@ -1,6 +1,9 @@
 /.phpunit.cache
 /.histoire/
 /node_modules
+/tests/Visual/test-results
+/tests/Visual/playwright-report
+/tests/Visual/.playwright
 /public/build
 /public/hot
 /public/storage

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# WizardingCode Visual Regression — Playwright × Histoire.
+#
+# Builds Histoire (if needed), starts the dev server, and runs the Playwright
+# visual regression suite under tests/Visual.
+#
+# Usage:
+#   bin/wc-visual-regression                     # run against existing baselines
+#   bin/wc-visual-regression --update-snapshots  # (re)generate baselines
+#   bin/wc-visual-regression --project=desktop-light --reporter=list
+#
+# CI is expected to set CI=true and skip the auto-start dev server in
+# playwright.config.ts (Plan 5 wires this into the workflow).
+
+set -euo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$PROJECT_ROOT"
+
+if [[ ! -d ".histoire/dist" ]]; then
+    echo "→ Building Histoire stories..."
+    bunx histoire build
+fi
+
+echo "→ Starting Histoire dev server on :6006 (background)..."
+bunx histoire dev --port=6006 > /dev/null 2>&1 &
+HISTOIRE_PID=$!
+trap "kill $HISTOIRE_PID 2>/dev/null || true" EXIT
+
+# Wait for the dev server to respond (up to 30s).
+for _ in {1..30}; do
+    if curl -s -o /dev/null http://localhost:6006; then
+        break
+    fi
+    sleep 1
+done
+
+if ! curl -s -o /dev/null http://localhost:6006; then
+    echo "✗ Histoire dev server failed to start on :6006" >&2
+    exit 1
+fi
+
+echo "→ Running Playwright visual regression..."
+cd tests/Visual && bunx playwright test "$@"
