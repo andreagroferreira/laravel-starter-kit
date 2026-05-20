@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# arka-sync-agents — mirror .agents/ (SoT) into multi-runtime folders
+# Idempotent. Run from project root.
+#
+# Strategy: per-skill symlinks. Each <runtime>/skills/<name> becomes a
+# symlink to ../../.agents/skills/<name>.
+
+set -euo pipefail
+
+if [ ! -d ".agents/skills" ]; then
+    echo "error: .agents/skills/ not found. Are you in the project root?" >&2
+    exit 1
+fi
+
+RUNTIMES=(".claude" ".cursor" ".codex" ".gemini" ".github" ".junie" ".kiro")
+SKILLS=()
+while IFS= read -r -d '' skill; do
+    SKILLS+=("$(basename "$skill")")
+done < <(find .agents/skills -mindepth 1 -maxdepth 1 -type d -print0)
+
+if [ "${#SKILLS[@]}" -eq 0 ]; then
+    echo "warn: no skills found in .agents/skills/"
+    exit 0
+fi
+
+CHANGES=0
+for runtime in "${RUNTIMES[@]}"; do
+    if [ ! -d "$runtime" ]; then
+        continue
+    fi
+    mkdir -p "$runtime/skills"
+    for skill in "${SKILLS[@]}"; do
+        target="$runtime/skills/$skill"
+        link_target="../../.agents/skills/$skill"
+
+        if [ -L "$target" ]; then
+            current=$(readlink "$target")
+            if [ "$current" = "$link_target" ]; then
+                continue
+            fi
+            rm "$target"
+        elif [ -d "$target" ] && [ ! -L "$target" ]; then
+            echo "Replacing real directory $target with symlink (backup: $target.bak.$(date +%s))"
+            mv "$target" "$target.bak.$(date +%s)"
+        fi
+
+        ln -sfn "$link_target" "$target"
+        echo "✓ $target -> $link_target"
+        CHANGES=$((CHANGES + 1))
+    done
+done
+
+if [ "$CHANGES" -eq 0 ]; then
+    echo "All multi-runtime targets already in sync with .agents/."
+else
+    echo
+    echo "$CHANGES symlink(s) updated."
+fi
+
+# Root-level CLAUDE.md / AGENTS.md / GEMINI.md sync deferred to Task B5 (which
+# rewrites CLAUDE.md and copies to AGENTS.md / GEMINI.md). This script
+# only handles skill folder symlinks.

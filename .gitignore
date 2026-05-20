@@ -23,3 +23,12 @@ Homestead.yaml
 /tmp
 /storage/arka/*
 !/storage/arka/.gitkeep
+
+# Backup directories from bin/arka-sync-agents (real-dir replacements)
+.claude/skills/*.bak.*
+.cursor/skills/*.bak.*
+.codex/skills/*.bak.*
+.gemini/skills/*.bak.*
+.github/skills/*.bak.*
+.junie/skills/*.bak.*
+.kiro/skills/*.bak.*
