@@ -1,24 +1,28 @@
 ---
 name: wizardingcode-ui-kb
-description: KB-first enforcement for UI/UX in the WC boilerplate. Triggers on any edit of resources/js/Components/ or packages/wizardingcode-ui/. Searches Obsidian Projects/Boilerplate WizardingCode/UI-UX/ BEFORE proposing changes. Full enforcement arrives in Plan 2.
+description: KB-first enforcement for UI/UX in the WC boilerplate. Triggers on any edit of resources/js/Components/ or packages/wizardingcode-ui/. Searches Obsidian Projects/Boilerplate WizardingCode/UI-UX/ BEFORE proposing changes. Apply this skill before creating or modifying any visual component. Plan 5 wires the pre-component-create hook.
 ---
 
-# WizardingCode UI KB-First - Skeleton
+# WizardingCode UI KB-First
 
-Full enforcement arrives in Plan 2 (Inertia port + UI/UX foundation).
+UI/UX changes are KB-driven. No new component without an Obsidian note.
 
-## Surface area (placeholder)
+## When to invoke
 
-- Obsidian vault path: `Projects/Boilerplate WizardingCode/UI-UX/`.
-- Required notes per component: props, slots, events, screenshots (light + dark), do/don't.
-- Hook: `pre-component-create.sh` blocks creation without matching KB note (Plan 2).
+- Creating a new Vue component under resources/js/Components/ or packages/wizardingcode-ui/.
+- Editing an existing component (visual change, prop addition, behavior change).
+- Designing a new pattern (CRUD, master-detail, settings tabs, etc.).
+- Auditing dark/light mode consistency.
 
-## Hard rules (forward declaration)
+## Rules
 
-- New component -> KB note required BEFORE PR opens.
-- Edited component -> KB note updated BEFORE merge.
-- 2 screenshots (light + dark) required.
+- @rules/kb-before-create.md — search the vault first; create the note BEFORE the component.
+- @rules/screenshots-required.md — light + dark screenshots mandatory per component note.
+- @rules/component-anatomy.md — required sections in every Component Obsidian note.
 
-## Status
+## Workflow
 
-Plan 1: skeleton. Plan 2: pre-component-create hook + Histoire integration.
+1. Search `Projects/Boilerplate WizardingCode/UI-UX/Components/` for the component name.
+2. If exists: read it; align your changes; update screenshots if appearance changes.
+3. If not: create the note BEFORE writing code.
+4. Reference the note in the PR description: `KB: [[Components/WcEmptyState]]`.

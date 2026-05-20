@@ -1,27 +1,31 @@
 ---
 name: inertia-vue-nuxtui
-description: Inertia v3 + Vue 3 + Nuxt UI 4 patterns for the WC boilerplate monolith mode. Activate for any frontend work in resources/js/. Full content lands in Plan 2 (Inertia port). This Plan 1 skeleton declares the surface area.
+description: Inertia v3 + Vue 3 + Nuxt UI 4 patterns for the WizardingCode boilerplate monolith mode. Apply this skill whenever editing files under resources/js/, app.config.ts, or packages/wizardingcode-ui/. Covers Inertia routing, Vue composition API conventions, Nuxt UI component usage, vendor-lock discipline, and the SSR-safe color mode pattern.
 ---
 
-# Inertia v3 + Vue 3 + Nuxt UI 4 - Skeleton
+# Inertia v3 + Vue 3 + Nuxt UI 4
 
-Full content arrives in Plan 2 (Dual Auth & Inertia Port).
+WC monolith frontend patterns. Always-on when working in resources/js/ or packages/wizardingcode-ui/.
 
-## Surface area (placeholder)
+## When to invoke
 
-- Inertia v3: page resolution, partial reloads, SSR, deferred props.
-- Vue 3: composition API, script setup, reactivity, suspense.
-- Nuxt UI 4: UDashboardPanel, UDashboardSidebar, UModal, USlideover, UToast, UDataTable, UForm.
-- Pinia 2: stores, persistence.
-- Tailwind 4: semantic tokens, @variant dark.
+- Creating or editing any .vue file under resources/js/.
+- Creating new pages, layouts, or components.
+- Modifying app.config.ts or the WC UI package.
+- Wiring Inertia routes (Laravel side AND Vue side).
+- Touching color mode or vendor-locked files.
 
-## Hard rules (forward declaration from CLAUDE.md section 6)
+## Rules
 
-- `WcDropzone` not `<input type="file">`.
-- `UModal` for confirms (NEVER `USlideover`).
-- Semantic tokens only - no raw Tailwind colors.
-- Vendor lock respected.
+- @rules/page-and-layout.md — Inertia v3 page + layout conventions (defineOptions, persistent layouts, head meta).
+- @rules/nuxt-ui-components.md — Forbidden patterns + correct primitive usage (UModal not USlideover for confirms, WcDropzone not <input type="file">, semantic tokens only).
+- @rules/vendor-lock.md — vendor-lock discipline (@vendor: header, /wc-vendor-diff, /wc-vendor-upgrade).
+- @rules/inertia-routing.md — Laravel routes + Inertia::render + how to add a new page-type.
 
-## Status
+## Workflow
 
-Plan 1: skeleton only. Plan 2: full rules + patterns + examples.
+1. Identify domain (page, layout, component, composable, store).
+2. Cite the matching rule.
+3. Use `<script setup lang="ts">`.
+4. Semantic tokens only (text-default, bg-default, etc.).
+5. After editing, `bun run build` + Vitest + visual regression.
