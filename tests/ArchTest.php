@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Illuminate\Database\Eloquent\Builder;
+
 arch('app uses strict types')
     // @phpstan-ignore-next-line method.notFound
     ->expect('App')
@@ -21,4 +23,4 @@ arch('no debug functions in source')
 arch('controllers do not contain Eloquent queries')
     // @phpstan-ignore-next-line method.notFound
     ->expect('App\Http\Controllers')
-    ->not->toUse(['Illuminate\Database\Eloquent\Builder', 'Illuminate\Database\Query\Builder']);
+    ->not->toUse([Builder::class, Illuminate\Database\Query\Builder::class]);

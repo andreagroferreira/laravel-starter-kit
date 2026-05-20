@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -54,7 +56,7 @@ expect()->extend('toBeOne', fn () => $this->toBe(1));
  * @param array<int, string> $expected
  */
 expect()->extend('toBeFillable', function (array $expected): void {
-    /** @var Illuminate\Database\Eloquent\Model $model */
+    /** @var Model $model */
     $model = $this->value;
     expect($model->getFillable())->toBe($expected);
 });
@@ -63,7 +65,7 @@ expect()->extend('toBeFillable', function (array $expected): void {
  * @param array<int, string> $expected
  */
 expect()->extend('toBeGuarded', function (array $expected): void {
-    /** @var Illuminate\Database\Eloquent\Model $model */
+    /** @var Model $model */
     $model = $this->value;
     expect($model->getGuarded())->toBe($expected);
 });
@@ -74,10 +76,10 @@ expect()->extend('toBeGuarded', function (array $expected): void {
 |--------------------------------------------------------------------------
 */
 
-function asStaff(): App\Models\User
+function asStaff(): User
 {
-    /** @var App\Models\User $user */
-    $user = App\Models\User::factory()->create();
+    /** @var User $user */
+    $user = User::factory()->create();
     Auth::guard('web')->login($user);
 
     return $user;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WizardingCode\ArkaBridge;
 
 use Illuminate\Support\ServiceProvider;
+use Override;
 use WizardingCode\ArkaBridge\Console\SyncCommand;
 
 final class ArkaBridgeServiceProvider extends ServiceProvider
@@ -18,6 +19,7 @@ final class ArkaBridgeServiceProvider extends ServiceProvider
         }
     }
 
+    #[Override]
     public function register(): void
     {
         $this->app->singleton('arka.bridge', fn (): ArkaBridge => new ArkaBridge);

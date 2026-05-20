@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Foundation\Application;
 use WizardingCode\ArkaBridge\ArkaBridge;
 use WizardingCode\ArkaBridge\ArkaBridgeServiceProvider;
 
@@ -11,13 +12,13 @@ uses()->beforeEach(function (): void {
 });
 
 it('boots the ArkaBridgeServiceProvider', function (): void {
-    $providers = config('app.providers') ?? [];
+    $providers = config('app.providers', []);
 
     expect(class_exists(ArkaBridgeServiceProvider::class))->toBeTrue();
 });
 
 it('exposes the arka.bridge singleton', function (): void {
-    /** @var Illuminate\Foundation\Application $app */
+    /** @var Application $app */
     $app = $this->app;
     $app->register(ArkaBridgeServiceProvider::class);
 
@@ -25,7 +26,7 @@ it('exposes the arka.bridge singleton', function (): void {
 });
 
 it('registers the arka:sync command', function (): void {
-    /** @var Illuminate\Foundation\Application $app */
+    /** @var Application $app */
     $app = $this->app;
     $app->register(ArkaBridgeServiceProvider::class);
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace WizardingCode\ArkaBridge;
 
+use Symfony\Component\Yaml\Yaml;
+
 final class ArkaBridge
 {
     /**
@@ -23,8 +25,8 @@ final class ArkaBridge
         }
 
         // Fallback: very basic YAML parser using Symfony Yaml if installed
-        if (class_exists('Symfony\\Component\\Yaml\\Yaml')) {
-            $parsed = \Symfony\Component\Yaml\Yaml::parseFile($path);
+        if (class_exists(Yaml::class)) {
+            $parsed = Yaml::parseFile($path);
 
             return is_array($parsed) ? $parsed : [];
         }
@@ -48,8 +50,8 @@ final class ArkaBridge
             return is_array($parsed) ? $parsed : [];
         }
 
-        if (class_exists('Symfony\\Component\\Yaml\\Yaml')) {
-            $parsed = \Symfony\Component\Yaml\Yaml::parseFile($path);
+        if (class_exists(Yaml::class)) {
+            $parsed = Yaml::parseFile($path);
 
             return is_array($parsed) ? $parsed : [];
         }
