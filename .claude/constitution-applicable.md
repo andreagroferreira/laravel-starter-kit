@@ -1,0 +1,2 @@
+# ArkaOS Constitution — Applicable Rules
+
