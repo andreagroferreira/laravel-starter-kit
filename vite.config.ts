@@ -1,5 +1,6 @@
 import laravel from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
+import vue from '@vitejs/plugin-vue';
+import ui from '@nuxt/ui/vite';
 import {defineConfig} from 'vite-plus';
 
 export default defineConfig({
@@ -29,9 +30,33 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: ["resources/css/app.css", "resources/js/app.js"],
+            input: ["resources/css/app.css", "resources/js/app.ts"],
             refresh: true,
         }),
-        tailwindcss(),
+        vue({
+            template: {
+                transformAssetUrls: {
+                    base: null,
+                    includeAbsolute: false,
+                },
+            },
+        }),
+        ui({
+            router: 'inertia',
+            ui: {
+                colors: {
+                    primary: 'green',
+                    neutral: 'zinc',
+                },
+            },
+        }),
     ],
+    optimizeDeps: {
+        exclude: ['@tailwindcss/oxide'],
+    },
+    build: {
+        rollupOptions: {
+            external: [/@tailwindcss\/oxide/, /\.node$/],
+        },
+    },
 });
