@@ -4,35 +4,33 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Ai\Agents\SeoAgent;
-use App\Http\Requests\AiCopyRequest;
+use App\Enums\AiGenerationStatus;
+use App\Http\Requests\AiSeoRequest;
+use App\Jobs\Ai\GenerateSeo;
+use App\Models\AiGeneration;
 use App\Models\Site;
 use App\Models\Tenant;
-use App\Services\AiCreditService;
 use App\Support\CurrentTenant;
 use Illuminate\Http\JsonResponse;
-use Laravel\Ai\Responses\StructuredAgentResponse;
 
 final class AiSeoController
 {
-    public function __invoke(AiCopyRequest $request, Site $site, AiCreditService $credits): JsonResponse
+    public function __invoke(AiSeoRequest $request, Site $site): JsonResponse
     {
         /** @var Tenant $tenant */
         $tenant = resolve(CurrentTenant::class)->getOrFail();
 
-        /** @var array{briefing: string} $validated */
-        $validated = $request->validated();
+        /** @var AiGeneration $generation */
+        $generation = AiGeneration::query()->create([
+            'user_id' => $request->user()?->getKey(),
+            'site_id' => $site->id,
+            'agent' => 'seo',
+            'status' => AiGenerationStatus::Queued,
+            'input' => $request->validated(),
+        ]);
 
-        $response = (new SeoAgent)->prompt('Content:
-'.$validated['briefing']);
+        dispatch(new GenerateSeo($generation->id, $tenant->id));
 
-        $credits->record($tenant, 'seo', $response->usage, $request->user(), [
-            'type' => 'site',
-            'id' => $site->id,
-        ], $response->meta->provider, $response->meta->model);
-
-        return response()->json(
-            $response instanceof StructuredAgentResponse ? $response->toArray() : []
-        );
+        return response()->json(['generation_id' => $generation->id], 202);
     }
 }

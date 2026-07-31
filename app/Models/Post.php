@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * @property-read string $id
  * @property-read string $site_id
+ * @property-read Site $site
  * @property-read string|null $author_id
  * @property-read string $title
  * @property-read string $slug

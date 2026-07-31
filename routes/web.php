@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AiArticleController;
 use App\Http\Controllers\AiCopyController;
+use App\Http\Controllers\AiGenerationController;
 use App\Http\Controllers\AiSeoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FormController;
@@ -37,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
     Route::put('/media/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+
+    Route::get('/ai/generations/{generation}', AiGenerationController::class)->name('ai.generations.show');
 
     Route::get('/sites', [SiteController::class, 'index'])->name('sites.index');
     Route::post('/sites', [SiteController::class, 'store'])->name('sites.store');

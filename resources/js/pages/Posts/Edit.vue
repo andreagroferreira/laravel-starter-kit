@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref } from 'vue';
+import { useAiGeneration } from '@/composables/useAiGeneration';
 import RichTextEditor from '../../components/RichTextEditor.vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
@@ -43,6 +44,7 @@ const form = reactive({
 
 const saving = ref(false);
 const aiLoading = ref<string | null>(null);
+const aiGeneration = useAiGeneration();
 
 function save() {
     saving.value = true;
@@ -66,28 +68,23 @@ function togglePublish() {
 async function generateSeo() {
     aiLoading.value = 'seo';
     try {
-        const response = await fetch(`/sites/${props.site.id}/ai/seo`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-XSRF-TOKEN': decodeURIComponent(
-                    document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] ?? '',
-                ),
-            },
-            body: JSON.stringify({
-                block_type: 'rich_text',
+        const generation = await aiGeneration.start(
+            `/sites/${props.site.id}/ai/seo`,
+            {
                 briefing: `${form.title}\n\n${form.excerpt}\n\n${form.body.slice(0, 3000)}`,
-            }),
+            },
+        );
+
+        const output = generation.output ?? {};
+        form.seo.title = (output.meta_title as string) ?? form.seo.title;
+        form.seo.description =
+            (output.meta_description as string) ?? form.seo.description;
+        toast.add({ title: 'SEO gerado com AI', color: 'success' });
+    } catch (error) {
+        toast.add({
+            title: error instanceof Error ? error.message : 'A geração falhou.',
+            color: 'error',
         });
-
-        if (!response.ok) throw new Error('AI request failed');
-
-        const data = await response.json();
-        form.seo.title = data.meta_title ?? form.seo.title;
-        form.seo.description = data.meta_description ?? form.seo.description;
-        toast.add({ title: 'SEO generated with AI', color: 'success' });
-    } catch {
-        toast.add({ title: 'AI request failed', color: 'error' });
     } finally {
         aiLoading.value = null;
     }

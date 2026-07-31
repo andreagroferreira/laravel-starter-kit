@@ -39,4 +39,7 @@ return [
     ],
 
     'ai_overage_meter_event' => env('STRIPE_AI_OVERAGE_METER_EVENT', 'ai_credits'),
+
+    // Real-usage pricing: 1 credit per N tokens (prompt + completion), minimum 1.
+    'tokens_per_credit' => (int) env('AI_TOKENS_PER_CREDIT', 1000),
 ];

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AiGeneration;
 use App\Models\AiUsage;
 use App\Models\AuditLog;
 use App\Models\Category;
@@ -85,6 +86,19 @@ it('exposes version author and post author', function (): void {
     expect($version->author->id)->toBe($user->id)
         ->and($post->author->id)->toBe($user->id)
         ->and($post->site)->not->toBeNull();
+});
+
+it('exposes ai generation relations', function (): void {
+    $user = User::factory()->create();
+    $site = Site::factory()->create();
+    $generation = AiGeneration::factory()->create([
+        'tenant_id' => $site->tenant_id,
+        'user_id' => $user->id,
+        'site_id' => $site->id,
+    ]);
+
+    expect($generation->user?->id)->toBe($user->id)
+        ->and($generation->site?->id)->toBe($site->id);
 });
 
 it('exposes remaining site relations', function (): void {

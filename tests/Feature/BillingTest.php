@@ -37,13 +37,19 @@ it('renders the billing page with the current plan', function (): void {
         );
 });
 
-it('rejects checkout for the free plan', function (): void {
+it('rejects checkout for the free plan and unknown plans', function (): void {
     $this->actingAs($this->user)
         ->get('/settings/billing/checkout/free')
-        ->assertServerError();
+        ->assertNotFound();
+
+    $this->actingAs($this->user)
+        ->get('/settings/billing/checkout/enterprise')
+        ->assertNotFound();
 });
 
 it('redirects to stripe checkout for a paid plan', function (): void {
+    config()->set('plans.plans.pro.stripe_price_id', 'price_pro_test');
+
     $checkout = Mockery::mock(Checkout::class);
     $checkout->shouldReceive('redirect')->once()->andReturn(redirect('https://checkout.stripe.com/session'));
 

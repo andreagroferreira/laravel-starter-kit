@@ -4,58 +4,33 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Ai\Agents\ArticleWriterAgent;
-use App\Enums\ContentStatus;
+use App\Enums\AiGenerationStatus;
 use App\Http\Requests\AiArticleRequest;
+use App\Jobs\Ai\GenerateArticle;
+use App\Models\AiGeneration;
 use App\Models\Site;
 use App\Models\Tenant;
-use App\Services\AiCreditService;
 use App\Support\CurrentTenant;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Str;
-use Laravel\Ai\Responses\StructuredAgentResponse;
 
 final class AiArticleController
 {
-    public function __invoke(AiArticleRequest $request, Site $site, AiCreditService $credits): JsonResponse
+    public function __invoke(AiArticleRequest $request, Site $site): JsonResponse
     {
         /** @var Tenant $tenant */
         $tenant = resolve(CurrentTenant::class)->getOrFail();
 
-        /** @var array{briefing: string, language?: string} $validated */
-        $validated = $request->validated();
-
-        $prompt = 'Briefing: '.$validated['briefing']
-            .(isset($validated['language']) ? '
-Language: '.$validated['language'] : '');
-
-        $response = new ArticleWriterAgent($tenant->brandProfile)->prompt($prompt);
-
-        $credits->record($tenant, 'article_writer', $response->usage, $request->user(), [
-            'type' => 'site',
-            'id' => $site->id,
-        ], $response->meta->provider, $response->meta->model);
-
-        /** @var array{title: string, excerpt: string, body: string, seo_title?: string, seo_description?: string} $article */
-        $article = $response instanceof StructuredAgentResponse ? $response->toArray() : [];
-
-        $post = $site->posts()->create([
-            'author_id' => $request->user()?->getKey(),
-            'title' => $article['title'],
-            'slug' => Str::slug($article['title']),
-            'status' => ContentStatus::Draft,
-            'excerpt' => $article['excerpt'],
-            'body' => $article['body'],
-            'seo' => array_filter([
-                'title' => $article['seo_title'] ?? null,
-                'description' => $article['seo_description'] ?? null,
-            ]) ?: null,
+        /** @var AiGeneration $generation */
+        $generation = AiGeneration::query()->create([
+            'user_id' => $request->user()?->getKey(),
+            'site_id' => $site->id,
+            'agent' => 'article_writer',
+            'status' => AiGenerationStatus::Queued,
+            'input' => $request->validated(),
         ]);
 
-        return response()->json([
-            'post_id' => $post->id,
-            'status' => $post->status->value,
-            'article' => $article,
-        ], 201);
+        dispatch(new GenerateArticle($generation->id, $tenant->id));
+
+        return response()->json(['generation_id' => $generation->id], 202);
     }
 }

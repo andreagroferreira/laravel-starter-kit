@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Events;
+
+use App\Models\Post;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+final class PostPublished implements ShouldBroadcast
+{
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
+
+    public function __construct(
+        public Post $post,
+        public string $tenantId,
+    ) {}
+
+    /**
+     * @return list<PrivateChannel>
+     */
+    public function broadcastOn(): array
+    {
+        return [new PrivateChannel('tenant.'.$this->tenantId)];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function broadcastWith(): array
+    {
+        return [
+            'id' => $this->post->id,
+            'site_id' => $this->post->site_id,
+            'title' => $this->post->title,
+        ];
+    }
+}

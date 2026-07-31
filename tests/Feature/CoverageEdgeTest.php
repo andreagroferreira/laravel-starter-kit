@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Ai\Agents\CopywriterAgent;
 use App\Mcp\Servers\WizardServer;
 use App\Mcp\Tools\CreatePageTool;
 use App\Mcp\Tools\GetPageTool;
@@ -12,6 +11,7 @@ use App\Models\Site;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\CurrentTenant;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\TransientToken;
 
 beforeEach(function (): void {
@@ -25,7 +25,7 @@ beforeEach(function (): void {
 });
 
 it('covers the copy controller current_content branch', function (): void {
-    CopywriterAgent::fake(['improved copy']);
+    Queue::fake();
 
     $site = Site::factory()->for($this->tenant)->create();
 
@@ -35,8 +35,8 @@ it('covers the copy controller current_content branch', function (): void {
             'briefing' => 'Make it punchier',
             'current_content' => 'Old boring heading',
         ])
-        ->assertOk()
-        ->assertJsonPath('copy', 'improved copy');
+        ->assertAccepted()
+        ->assertJsonStructure(['generation_id']);
 });
 
 it('errors creating a page on a missing site', function (): void {

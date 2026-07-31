@@ -5,12 +5,21 @@ declare(strict_types=1);
 use App\Ai\Agents\ArticleWriterAgent;
 use App\Ai\Agents\CopywriterAgent;
 use App\Ai\Agents\SeoAgent;
+use App\Enums\AiGenerationStatus;
+use App\Events\AiGenerationUpdated;
+use App\Jobs\Ai\GenerateArticle;
+use App\Jobs\Ai\GenerateCopy;
+use App\Jobs\Ai\GenerateSeo;
+use App\Models\AiGeneration;
 use App\Models\AiUsage;
 use App\Models\BrandProfile;
 use App\Models\Site;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Queue\Middleware\TenantAware;
 use App\Services\AiCreditService;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['ai_credits_monthly' => 10]);
@@ -20,80 +29,168 @@ beforeEach(function (): void {
     $this->site = Site::factory()->for($this->tenant)->create();
 });
 
-it('generates block copy and records usage', function (): void {
-    CopywriterAgent::fake(['Buy now and save 20%']);
+it('queues a copy generation and returns 202', function (): void {
+    Queue::fake();
 
     $this->actingAs($this->user)
         ->postJson(sprintf('/sites/%s/ai/copy', $this->site->id), [
             'block_type' => 'cta',
             'briefing' => 'Call to action for a summer sale',
         ])
-        ->assertOk()
-        ->assertJsonPath('copy', 'Buy now and save 20%');
+        ->assertAccepted()
+        ->assertJsonStructure(['generation_id']);
+
+    Queue::assertPushedOn('ai', GenerateCopy::class);
+
+    $generation = AiGeneration::query()->sole();
+
+    expect($generation->status)->toBe(AiGenerationStatus::Queued)
+        ->and($generation->agent)->toBe('copywriter')
+        ->and($generation->site_id)->toBe($this->site->id);
+});
+
+it('queues article and seo generations with tenant-aware jobs', function (): void {
+    Queue::fake();
+
+    $this->actingAs($this->user)
+        ->postJson(sprintf('/sites/%s/ai/article', $this->site->id), [
+            'briefing' => 'Artigo sobre CMS',
+            'language' => 'pt-PT',
+        ])
+        ->assertAccepted();
+
+    $this->actingAs($this->user)
+        ->postJson(sprintf('/sites/%s/ai/seo', $this->site->id), [
+            'briefing' => 'Conteúdo da página',
+        ])
+        ->assertAccepted();
+
+    Queue::assertPushedOn('ai', GenerateArticle::class);
+    Queue::assertPushedOn('ai', GenerateSeo::class);
+    Queue::assertPushed(GenerateArticle::class, fn (GenerateArticle $job): bool => $job->middleware()[0] instanceof TenantAware);
+
+    expect(AiGeneration::query()->count())->toBe(2);
+});
+
+it('completes a seo generation with structured output', function (): void {
+    SeoAgent::fake([['meta_title' => 'Título', 'meta_description' => 'Descrição']]);
+
+    $generation = AiGeneration::factory()->for($this->tenant)->create([
+        'site_id' => $this->site->id,
+        'agent' => 'seo',
+        'input' => ['briefing' => 'Conteúdo sobre jardinagem'],
+    ]);
+
+    new GenerateSeo($generation->id, $this->tenant->id)->handle(resolve(AiCreditService::class));
+
+    $generation->refresh();
+
+    expect($generation->status)->toBe(AiGenerationStatus::Completed)
+        ->and($generation->output)->toMatchArray(['meta_title' => 'Título']);
+});
+
+it('runs the copy job, records real token usage and broadcasts', function (): void {
+    Event::fake([AiGenerationUpdated::class]);
+    CopywriterAgent::fake(['Buy now and save 20%']);
+
+    $generation = AiGeneration::factory()->for($this->tenant)->create([
+        'user_id' => $this->user->id,
+        'site_id' => $this->site->id,
+        'agent' => 'copywriter',
+        'input' => ['block_type' => 'cta', 'briefing' => 'summer sale', 'current_content' => 'old copy'],
+    ]);
+
+    new GenerateCopy($generation->id, $this->tenant->id)->handle(resolve(AiCreditService::class));
 
     CopywriterAgent::assertPrompted(fn ($prompt): bool => $prompt->contains('summer sale'));
 
-    expect(AiUsage::query()->where('agent', 'copywriter')->where('resource_id', $this->site->id)->exists())->toBeTrue();
+    $generation->refresh();
+
+    expect($generation->status)->toBe(AiGenerationStatus::Completed)
+        ->and($generation->output)->toBe(['copy' => 'Buy now and save 20%'])
+        ->and(AiUsage::query()->where('agent', 'copywriter')->count())->toBe(1);
+
+    Event::assertDispatchedTimes(AiGenerationUpdated::class, 2);
 });
 
 it('injects the brand voice into agent instructions', function (): void {
-    CopywriterAgent::fake(['copy']);
-
     BrandProfile::factory()->for($this->tenant)->create(['tone_of_voice' => 'pirate speak']);
-
-    $this->actingAs($this->user)
-        ->postJson(sprintf('/sites/%s/ai/copy', $this->site->id), [
-            'block_type' => 'hero',
-            'briefing' => 'Hero heading',
-        ])
-        ->assertOk();
 
     $agent = new CopywriterAgent($this->tenant->brandProfile);
 
     expect($agent->instructions())->toContain('pirate speak');
 });
 
-it('creates an article draft from a briefing', function (): void {
-    ArticleWriterAgent::fake([[
-        'title' => 'O futuro dos CMS',
-        'excerpt' => 'Um resumo curto.',
-        'body' => '<p>Artigo completo.</p>',
-        'seo_title' => 'Futuro CMS',
-        'seo_description' => 'Descrição SEO.',
-    ]]);
+it('creates an article draft with a unique slug from the job', function (): void {
+    ArticleWriterAgent::fake([
+        [
+            'title' => 'O futuro dos CMS',
+            'excerpt' => 'Um resumo curto.',
+            'body' => '<p>Artigo completo.</p>',
+            'seo_title' => 'Futuro CMS',
+            'seo_description' => 'Descrição SEO.',
+        ],
+        [
+            'title' => 'O futuro dos CMS',
+            'excerpt' => 'Outro resumo.',
+            'body' => '<p>Outro artigo.</p>',
+        ],
+    ]);
 
-    $this->actingAs($this->user)
-        ->postJson(sprintf('/sites/%s/ai/article', $this->site->id), [
-            'briefing' => 'Artigo sobre o futuro dos CMS com AI',
-        ])
-        ->assertCreated()
-        ->assertJsonPath('article.title', 'O futuro dos CMS')
-        ->assertJsonPath('status', 'draft');
+    foreach (range(1, 2) as $round) {
+        $generation = AiGeneration::factory()->for($this->tenant)->create([
+            'user_id' => $this->user->id,
+            'site_id' => $this->site->id,
+            'agent' => 'article_writer',
+            'input' => ['briefing' => 'Artigo sobre o futuro dos CMS '.$round],
+        ]);
 
-    $post = $this->site->posts()->sole();
+        new GenerateArticle($generation->id, $this->tenant->id)->handle(resolve(AiCreditService::class));
 
-    expect($post->title)->toBe('O futuro dos CMS')
-        ->and($post->seo['title'])->toBe('Futuro CMS')
-        ->and($post->author_id)->toBe($this->user->id);
+        expect($generation->refresh()->status)->toBe(AiGenerationStatus::Completed);
+    }
 
-    expect(AiUsage::query()->where('agent', 'article_writer')->exists())->toBeTrue();
+    $slugs = $this->site->posts()->pluck('slug')->sort()->values()->all();
+
+    expect($slugs)->toBe(['o-futuro-dos-cms', 'o-futuro-dos-cms-2'])
+        ->and($this->site->posts()->first()?->author_id)->toBe($this->user->id);
 });
 
-it('generates seo meta', function (): void {
-    SeoAgent::fake([['meta_title' => 'Título', 'meta_description' => 'Descrição']]);
+it('marks the generation as failed and refunds on unstructured responses', function (): void {
+    SeoAgent::fake(['plain text, not structured']);
 
-    $this->actingAs($this->user)
-        ->postJson(sprintf('/sites/%s/ai/seo', $this->site->id), [
-            'block_type' => 'rich_text',
-            'briefing' => 'Conteúdo da página sobre jardinagem',
-        ])
-        ->assertOk()
-        ->assertJsonPath('meta_title', 'Título');
+    $generation = AiGeneration::factory()->for($this->tenant)->create([
+        'site_id' => $this->site->id,
+        'agent' => 'seo',
+        'input' => ['briefing' => 'Conteúdo'],
+    ]);
+
+    new GenerateSeo($generation->id, $this->tenant->id)->handle(resolve(AiCreditService::class));
+
+    $generation->refresh();
+
+    expect($generation->status)->toBe(AiGenerationStatus::Failed)
+        ->and($generation->error)->not->toBeNull()
+        ->and(AiUsage::query()->count())->toBe(0);
 });
 
-it('blocks generation when the tenant is out of credits', function (): void {
-    CopywriterAgent::fake(['copy']);
+it('fails the generation without charging when the tenant is out of credits', function (): void {
+    AiUsage::factory()->for($this->tenant)->count(10)->create();
 
+    $generation = AiGeneration::factory()->for($this->tenant)->create([
+        'site_id' => $this->site->id,
+        'agent' => 'seo',
+        'input' => ['briefing' => 'Conteúdo'],
+    ]);
+
+    new GenerateSeo($generation->id, $this->tenant->id)->handle(resolve(AiCreditService::class));
+
+    expect($generation->refresh()->status)->toBe(AiGenerationStatus::Failed)
+        ->and($generation->error)->toContain('Out of AI credits')
+        ->and(AiUsage::query()->count())->toBe(10);
+});
+
+it('blocks new generations at the http layer when out of credits', function (): void {
     AiUsage::factory()->for($this->tenant)->count(10)->create();
 
     $this->actingAs($this->user)
@@ -102,6 +199,26 @@ it('blocks generation when the tenant is out of credits', function (): void {
             'briefing' => 'More copy please',
         ])
         ->assertStatus(402);
+});
+
+it('exposes generation state on the polling endpoint scoped to the tenant', function (): void {
+    $generation = AiGeneration::factory()->for($this->tenant)->create([
+        'agent' => 'seo',
+        'status' => AiGenerationStatus::Completed,
+        'output' => ['meta_title' => 'Título'],
+    ]);
+
+    $this->actingAs($this->user)
+        ->getJson('/ai/generations/'.$generation->id)
+        ->assertOk()
+        ->assertJsonPath('status', 'completed')
+        ->assertJsonPath('output.meta_title', 'Título');
+
+    $foreign = AiGeneration::factory()->create();
+
+    $this->actingAs($this->user)
+        ->getJson('/ai/generations/'.$foreign->id)
+        ->assertNotFound();
 });
 
 it('tracks monthly credit usage per tenant', function (): void {

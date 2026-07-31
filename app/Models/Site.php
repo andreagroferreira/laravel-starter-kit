@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * @property-read string $id
  * @property-read string $tenant_id
+ * @property-read Tenant $tenant
  * @property-read string $name
  * @property-read string $slug
  * @property-read SiteType $type

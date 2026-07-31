@@ -4,38 +4,33 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Ai\Agents\CopywriterAgent;
+use App\Enums\AiGenerationStatus;
 use App\Http\Requests\AiCopyRequest;
+use App\Jobs\Ai\GenerateCopy;
+use App\Models\AiGeneration;
 use App\Models\Site;
 use App\Models\Tenant;
-use App\Services\AiCreditService;
 use App\Support\CurrentTenant;
 use Illuminate\Http\JsonResponse;
 
 final class AiCopyController
 {
-    public function __invoke(AiCopyRequest $request, Site $site, AiCreditService $credits): JsonResponse
+    public function __invoke(AiCopyRequest $request, Site $site): JsonResponse
     {
         /** @var Tenant $tenant */
         $tenant = resolve(CurrentTenant::class)->getOrFail();
 
-        /** @var array{block_type: string, briefing: string, current_content?: string} $validated */
-        $validated = $request->validated();
+        /** @var AiGeneration $generation */
+        $generation = AiGeneration::query()->create([
+            'user_id' => $request->user()?->getKey(),
+            'site_id' => $site->id,
+            'agent' => 'copywriter',
+            'status' => AiGenerationStatus::Queued,
+            'input' => $request->validated(),
+        ]);
 
-        $prompt = "Block type: {$validated['block_type']}\nBriefing: {$validated['briefing']}";
+        dispatch(new GenerateCopy($generation->id, $tenant->id));
 
-        if (isset($validated['current_content'])) {
-            $prompt .= '
-Current content to improve: '.$validated['current_content'];
-        }
-
-        $response = new CopywriterAgent($tenant->brandProfile)->prompt($prompt);
-
-        $credits->record($tenant, 'copywriter', $response->usage, $request->user(), [
-            'type' => 'site',
-            'id' => $site->id,
-        ], $response->meta->provider, $response->meta->model);
-
-        return response()->json(['copy' => $response->text]);
+        return response()->json(['generation_id' => $generation->id], 202);
     }
 }
