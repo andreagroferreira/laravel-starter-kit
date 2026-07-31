@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
-use App\Models\BrandProfile;
+use App\Http\Requests\UpdateBrandProfileRequest;
 use App\Models\Tenant;
 use App\Support\CurrentTenant;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,18 +31,10 @@ final class BrandProfileController
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(UpdateBrandProfileRequest $request): RedirectResponse
     {
-        Gate::authorize('manage', BrandProfile::class);
-
         /** @var array{name: string, tone_of_voice?: string|null, glossary?: array<string, string>|null, examples?: list<string>|null} $validated */
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'tone_of_voice' => ['nullable', 'string', 'max:2000'],
-            'glossary' => ['nullable', 'array'],
-            'examples' => ['nullable', 'array'],
-            'examples.*' => ['string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         /** @var Tenant $tenant */
         $tenant = resolve(CurrentTenant::class)->getOrFail();

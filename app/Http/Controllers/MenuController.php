@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMenuRequest;
+use App\Http\Requests\UpdateMenuRequest;
 use App\Models\Menu;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,31 +23,20 @@ final class MenuController
         ]);
     }
 
-    public function store(Request $request, Site $site): RedirectResponse
+    public function store(StoreMenuRequest $request, Site $site): RedirectResponse
     {
-        Gate::authorize('create', Menu::class);
-
-        $request->validate([
-            'name' => ['required', 'string', 'alpha_dash', 'max:60'],
-        ]);
-
         $site->menus()->create(['name' => $request->string('name')->value(), 'items' => []]);
 
         return back();
     }
 
-    public function update(Request $request, Site $site, Menu $menu): RedirectResponse
+    public function update(UpdateMenuRequest $request, Site $site, Menu $menu): RedirectResponse
     {
-        Gate::authorize('update', $menu);
-
         abort_unless($menu->site_id === $site->id, 404);
 
         /** @var array{items: list<array{label: string, url: string}>} $validated */
-        $validated = $request->validate([
-            'items' => ['present', 'array'],
-            'items.*.label' => ['required', 'string', 'max:100'],
-            'items.*.url' => ['required', 'string', 'max:500'],
-        ]);
+        /** @var array{items: list<array{label: string, url: string}>} $validated */
+        $validated = $request->validated();
 
         $menu->update($validated);
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { useConfirm } from '@/composables/useConfirm';
 import SettingsLayout from '../../components/settings/SettingsLayout.vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
@@ -24,8 +25,10 @@ const props = defineProps<{
 const page = usePage();
 const toast = useToast();
 
+const confirm = useConfirm();
+
 const open = ref(false);
-const form = reactive({
+const form = useForm({
     name: '',
     abilities: ['read'] as string[],
 });
@@ -33,24 +36,28 @@ const form = reactive({
 const newToken = computed(() => page.props.flash.token);
 
 function createToken() {
-    router.post(
-        '/settings/api/tokens',
-        { ...form },
-        {
-            onSuccess: () => {
-                open.value = false;
-                form.name = '';
-                form.abilities = ['read'];
-            },
+    form.post('/settings/api/tokens', {
+        onSuccess: () => {
+            open.value = false;
+            form.reset();
         },
-    );
+    });
 }
 
-function revoke(id: string) {
-    router.delete(`/settings/api/tokens/${id}`, {
-        onSuccess: () =>
-            toast.add({ title: 'Token revoked', color: 'success' }),
+async function revoke(id: string) {
+    const confirmed = await confirm({
+        title: 'Revogar este token?',
+        description: 'Os agentes que o usam perdem o acesso imediatamente.',
+        confirmLabel: 'Revogar',
     });
+
+    if (confirmed) {
+        router.delete(`/settings/api/tokens/${id}`, {
+            preserveScroll: true,
+            onSuccess: () =>
+                toast.add({ title: 'Token revogado', color: 'success' }),
+        });
+    }
 }
 
 function copy(text: string) {
@@ -75,7 +82,7 @@ const claudeSnippet = computed(
             class="mb-4"
         >
             <UButton
-                label="New token"
+                label="Novo token"
                 icon="i-lucide-plus"
                 class="w-fit lg:ms-auto"
                 @click="open = true"
@@ -84,12 +91,12 @@ const claudeSnippet = computed(
 
         <UAlert
             v-if="newToken?.plainTextToken"
-            title="Token created — copy it now, it will not be shown again"
+            title="Token criado — copia-o agora, não volta a ser mostrado"
             color="success"
             variant="subtle"
             :actions="[
                 {
-                    label: 'Copy',
+                    label: 'Copiar',
                     icon: 'i-lucide-copy',
                     onClick: () => copy(newToken!.plainTextToken),
                 },
@@ -131,7 +138,7 @@ const claudeSnippet = computed(
         <UEmpty
             v-if="tokens.length === 0"
             icon="i-lucide-key-round"
-            title="No tokens yet"
+            title="Ainda não há tokens"
         />
 
         <div
@@ -148,9 +155,9 @@ const claudeSnippet = computed(
                     <p class="text-sm text-muted">
                         {{ token.abilities.join(', ') }}
                         <span v-if="token.last_used_at">
-                            · last used {{ token.last_used_at }}</span
+                            · usado {{ token.last_used_at }}</span
                         >
-                        <span v-else> · never used</span>
+                        <span v-else> · nunca usado</span>
                     </p>
                 </div>
                 <UButton
@@ -158,23 +165,24 @@ const claudeSnippet = computed(
                     size="xs"
                     color="error"
                     variant="ghost"
+                    aria-label="Revogar token"
                     @click="revoke(token.id)"
                 />
             </div>
         </div>
 
-        <UModal v-model:open="open" title="New token">
+        <UModal v-model:open="open" title="Novo token">
             <template #body>
                 <form class="space-y-4" @submit.prevent="createToken">
-                    <UFormField label="Name" required>
+                    <UFormField label="Nome" required :error="form.errors.name">
                         <UInput
                             v-model="form.name"
-                            placeholder="e.g. Claude desktop, CI deploy"
+                            placeholder="ex.: Claude desktop, CI deploy"
                             class="w-full"
                             autofocus
                         />
                     </UFormField>
-                    <UFormField label="Scopes">
+                    <UFormField label="Scopes" :error="form.errors.abilities">
                         <UCheckbox
                             v-for="ability in availableAbilities"
                             :key="ability"
@@ -189,7 +197,12 @@ const claudeSnippet = computed(
                             "
                         />
                     </UFormField>
-                    <UButton type="submit" label="Create token" block />
+                    <UButton
+                        type="submit"
+                        label="Criar token"
+                        block
+                        :loading="form.processing"
+                    />
                 </form>
             </template>
         </UModal>

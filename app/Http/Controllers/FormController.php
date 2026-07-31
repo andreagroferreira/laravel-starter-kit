@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreFormRequest;
 use App\Models\Form;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,7 +22,7 @@ final class FormController
         ]);
     }
 
-    public function store(Request $request, Site $site): RedirectResponse
+    public function store(StoreFormRequest $request, Site $site): RedirectResponse
     {
         Gate::authorize('create', Form::class);
 

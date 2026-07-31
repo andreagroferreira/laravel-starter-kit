@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMediaRequest;
+use App\Http\Requests\UpdateMediaRequest;
 use App\Models\MediaAsset;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -16,12 +19,17 @@ use Inertia\Response;
 
 final class MediaController
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = (string) $request->query('search', '');
+
         return Inertia::render('Media/Index', [
+            'filters' => ['search' => $search],
             'assets' => MediaAsset::query()
+                ->when($search !== '', fn (Builder $query) => $query->whereLike('filename', '%'.$search.'%'))
                 ->latest()
                 ->paginate(24)
+                ->withQueryString()
                 ->through(fn (MediaAsset $asset): array => [
                     'id' => $asset->id,
                     'url' => $asset->url(),
@@ -33,7 +41,7 @@ final class MediaController
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreMediaRequest $request): RedirectResponse
     {
         Gate::authorize('create', MediaAsset::class);
 
@@ -63,7 +71,7 @@ final class MediaController
         return back();
     }
 
-    public function update(Request $request, MediaAsset $media): RedirectResponse
+    public function update(UpdateMediaRequest $request, MediaAsset $media): RedirectResponse
     {
         Gate::authorize('update', $media);
 

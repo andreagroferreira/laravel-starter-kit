@@ -51,7 +51,10 @@ function removeExample(index: number) {
     form.examples.splice(index, 1);
 }
 
+const saving = ref(false);
+
 function save() {
+    saving.value = true;
     router.put(
         '/settings/brand',
         {
@@ -65,8 +68,17 @@ function save() {
             examples: form.examples,
         },
         {
+            preserveScroll: true,
+            onFinish: () => {
+                saving.value = false;
+            },
             onSuccess: () =>
-                toast.add({ title: 'Brand voice saved', color: 'success' }),
+                toast.add({ title: 'Brand voice guardada', color: 'success' }),
+            onError: (errors) =>
+                toast.add({
+                    title: Object.values(errors)[0] ?? 'Dados inválidos.',
+                    color: 'error',
+                }),
         },
     );
 }

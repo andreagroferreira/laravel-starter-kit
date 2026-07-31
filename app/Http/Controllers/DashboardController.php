@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\ContentStatus;
+use App\Models\Page;
+use App\Models\Post;
 use App\Models\Site;
 use App\Models\Tenant;
 use App\Services\AiCreditService;
@@ -34,8 +36,8 @@ final class DashboardController
         return Inertia::render('Dashboard/Index', [
             'stats' => [
                 'sites' => Site::query()->count(),
-                'pages' => $sites->sum('pages_count'),
-                'posts' => $sites->sum('posts_count'),
+                'pages' => Page::query()->whereIn('site_id', Site::query()->select('id'))->count(),
+                'posts' => Post::query()->whereIn('site_id', Site::query()->select('id'))->count(),
                 'ai_credits_used' => $credits->usedThisMonth($tenant),
                 'ai_credits_monthly' => $tenant->ai_credits_monthly,
             ],

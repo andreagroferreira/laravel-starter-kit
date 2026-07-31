@@ -1,165 +1,49 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import type { FormSubmitEvent } from '@nuxt/ui';
-import { reactive, ref } from 'vue';
-import * as z from 'zod';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
 import SettingsLayout from '../../components/settings/SettingsLayout.vue';
 import AppLayout from '../../layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout });
 
-const fileRef = ref<HTMLInputElement>();
-
-const profileSchema = z.object({
-    name: z.string().min(2, 'Too short'),
-    email: z.string().email('Invalid email'),
-    username: z.string().min(2, 'Too short'),
-    avatar: z.string().optional(),
-    bio: z.string().optional(),
-});
-
-type ProfileSchema = z.output<typeof profileSchema>;
-
-const profile = reactive<Partial<ProfileSchema>>({
-    name: 'Benjamin Canac',
-    email: 'ben@nuxtlabs.com',
-    username: 'benjamincanac',
-    avatar: undefined,
-    bio: undefined,
-});
+const page = usePage();
 const toast = useToast();
-async function onSubmit(_event: FormSubmitEvent<ProfileSchema>) {
-    // TODO: persist the profile via a backend endpoint once auth is wired up.
-    toast.add({
-        title: 'Success',
-        description: 'Your settings have been updated.',
-        icon: 'i-lucide-check',
-        color: 'success',
+
+const form = useForm({
+    name: page.props.auth.user?.name ?? '',
+    email: page.props.auth.user?.email ?? '',
+});
+
+function submit() {
+    form.put('/user/profile-information', {
+        preserveScroll: true,
+        onSuccess: () =>
+            toast.add({ title: 'Perfil atualizado', color: 'success' }),
     });
-}
-
-function onFileChange(e: Event) {
-    const input = e.target as HTMLInputElement;
-
-    if (!input.files?.length) {
-        return;
-    }
-
-    profile.avatar = URL.createObjectURL(input.files[0]);
-}
-
-function onFileClick() {
-    fileRef.value?.click();
 }
 </script>
 
 <template>
-    <Head title="Settings" />
+    <Head title="Definições — Perfil" />
 
     <SettingsLayout>
-        <UForm
-            id="settings"
-            :schema="profileSchema"
-            :state="profile"
-            @submit="onSubmit"
+        <UPageCard
+            title="Perfil"
+            description="O teu nome e email de acesso."
+            variant="subtle"
         >
-            <UPageCard
-                title="Profile"
-                description="This information will be displayed publicly."
-                variant="naked"
-                orientation="horizontal"
-                class="mb-4"
-            >
+            <form class="max-w-md space-y-4" @submit.prevent="submit">
+                <UFormField label="Nome" required :error="form.errors.name">
+                    <UInput v-model="form.name" class="w-full" />
+                </UFormField>
+                <UFormField label="Email" required :error="form.errors.email">
+                    <UInput v-model="form.email" type="email" class="w-full" />
+                </UFormField>
                 <UButton
-                    form="settings"
-                    label="Save changes"
-                    color="neutral"
                     type="submit"
-                    class="w-fit lg:ms-auto"
+                    label="Guardar"
+                    :loading="form.processing"
                 />
-            </UPageCard>
-
-            <UPageCard variant="subtle">
-                <UFormField
-                    name="name"
-                    label="Name"
-                    description="Will appear on receipts, invoices, and other communication."
-                    required
-                    class="flex items-start justify-between gap-4 max-sm:flex-col"
-                >
-                    <UInput v-model="profile.name" autocomplete="off" />
-                </UFormField>
-                <USeparator />
-                <UFormField
-                    name="email"
-                    label="Email"
-                    description="Used to sign in, for email receipts and product updates."
-                    required
-                    class="flex items-start justify-between gap-4 max-sm:flex-col"
-                >
-                    <UInput
-                        v-model="profile.email"
-                        type="email"
-                        autocomplete="off"
-                    />
-                </UFormField>
-                <USeparator />
-                <UFormField
-                    name="username"
-                    label="Username"
-                    description="Your unique username for logging in and your profile URL."
-                    required
-                    class="flex items-start justify-between gap-4 max-sm:flex-col"
-                >
-                    <UInput
-                        v-model="profile.username"
-                        type="username"
-                        autocomplete="off"
-                    />
-                </UFormField>
-                <USeparator />
-                <UFormField
-                    name="avatar"
-                    label="Avatar"
-                    description="JPG, GIF or PNG. 1MB Max."
-                    class="flex justify-between gap-4 max-sm:flex-col sm:items-center"
-                >
-                    <div class="flex flex-wrap items-center gap-3">
-                        <UAvatar
-                            :src="profile.avatar"
-                            :alt="profile.name"
-                            size="lg"
-                        />
-                        <UButton
-                            label="Choose"
-                            color="neutral"
-                            @click="onFileClick"
-                        />
-                        <input
-                            ref="fileRef"
-                            type="file"
-                            class="hidden"
-                            accept=".jpg, .jpeg, .png, .gif"
-                            @change="onFileChange"
-                        />
-                    </div>
-                </UFormField>
-                <USeparator />
-                <UFormField
-                    name="bio"
-                    label="Bio"
-                    description="Brief description for your profile. URLs are hyperlinked."
-                    class="flex items-start justify-between gap-4 max-sm:flex-col"
-                    :ui="{ container: 'w-full' }"
-                >
-                    <UTextarea
-                        v-model="profile.bio"
-                        :rows="5"
-                        autoresize
-                        class="w-full"
-                    />
-                </UFormField>
-            </UPageCard>
-        </UForm>
+            </form>
+        </UPageCard>
     </SettingsLayout>
 </template>

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreRedirectRequest;
 use App\Models\Redirect;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse as HttpRedirect;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,7 +22,7 @@ final class RedirectController
         ]);
     }
 
-    public function store(Request $request, Site $site): HttpRedirect
+    public function store(StoreRedirectRequest $request, Site $site): HttpRedirect
     {
         Gate::authorize('create', Redirect::class);
 

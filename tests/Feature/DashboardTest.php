@@ -54,13 +54,6 @@ it('renders settings members with real tenant members', function (): void {
         );
 });
 
-it('renders settings notifications', function (): void {
-    $this->actingAs($this->user)
-        ->get('/settings/notifications')
-        ->assertOk()
-        ->assertInertia(fn (Assert $page): Assert => $page->component('Settings/Notifications'));
-});
-
 it('renders settings security', function (): void {
     $this->actingAs($this->user)
         ->get('/settings/security')

@@ -1,31 +1,23 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { useConfirm } from '@/composables/useConfirm';
+import type { FormField, Site, SiteForm } from '@/types/models';
 import AppLayout from '../../layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout });
 
-interface FormField {
-    name: string;
-    type: string;
-    required?: boolean;
-}
-
-interface SiteForm {
-    id: string;
-    name: string;
-    fields: FormField[];
-}
-
 const props = defineProps<{
-    site: { id: string; name: string; slug: string };
+    site: Pick<Site, 'id' | 'name' | 'slug'>;
     forms: SiteForm[];
 }>();
 
+const confirm = useConfirm();
+
 const open = ref(false);
-const newForm = reactive({
+const newForm = useForm<{ name: string; fields: FormField[] }>({
     name: '',
-    fields: [{ name: 'email', type: 'email', required: true }] as FormField[],
+    fields: [{ name: 'email', type: 'email', required: true }],
 });
 
 function addField() {
@@ -37,43 +29,47 @@ function removeField(index: number) {
 }
 
 function createForm() {
-    router.post(
-        `/sites/${props.site.id}/forms`,
-        { ...newForm },
-        {
-            onSuccess: () => {
-                open.value = false;
-                newForm.name = '';
-                newForm.fields = [
-                    { name: 'email', type: 'email', required: true },
-                ];
-            },
+    newForm.post(`/sites/${props.site.id}/forms`, {
+        onSuccess: () => {
+            open.value = false;
+            newForm.reset();
         },
-    );
+    });
 }
 
-function destroy(id: string) {
-    router.delete(`/sites/${props.site.id}/forms/${id}`);
+async function destroy(form: SiteForm) {
+    const confirmed = await confirm({
+        title: `Apagar o formulário «${form.name}»?`,
+        description: 'Os sites publicados deixam de o poder renderizar.',
+        confirmLabel: 'Apagar',
+    });
+
+    if (confirmed) {
+        router.delete(`/sites/${props.site.id}/forms/${form.id}`, {
+            preserveScroll: true,
+        });
+    }
 }
 </script>
 
 <template>
-    <Head :title="`Forms — ${site.name}`" />
+    <Head :title="`Formulários — ${site.name}`" />
 
     <UDashboardPanel id="forms">
         <template #header>
-            <UDashboardNavbar :title="`Forms — ${site.name}`">
+            <UDashboardNavbar :title="`Formulários — ${site.name}`">
                 <template #leading>
                     <UDashboardSidebarCollapse />
                     <UButton
                         icon="i-lucide-arrow-left"
                         variant="ghost"
                         :to="`/sites/${site.id}`"
+                        aria-label="Voltar ao site"
                     />
                 </template>
                 <template #right>
                     <UButton
-                        label="New form"
+                        label="Novo formulário"
                         icon="i-lucide-plus"
                         @click="open = true"
                     />
@@ -86,7 +82,15 @@ function destroy(id: string) {
                 <UEmpty
                     v-if="forms.length === 0"
                     icon="i-lucide-clipboard-list"
-                    title="No forms"
+                    title="Ainda não há formulários"
+                    description="Cria um formulário de contacto ou captação de leads."
+                    :actions="[
+                        {
+                            label: 'Novo formulário',
+                            icon: 'i-lucide-plus',
+                            onClick: () => (open = true),
+                        },
+                    ]"
                 />
 
                 <UPageCard
@@ -95,7 +99,9 @@ function destroy(id: string) {
                     :title="form.name"
                     variant="subtle"
                 >
-                    <div class="flex items-center justify-between">
+                    <div
+                        class="flex flex-wrap items-center justify-between gap-2"
+                    >
                         <div class="flex flex-wrap gap-2">
                             <UBadge
                                 v-for="field in form.fields"
@@ -109,16 +115,21 @@ function destroy(id: string) {
                             size="xs"
                             color="error"
                             variant="ghost"
-                            @click="destroy(form.id)"
+                            aria-label="Apagar formulário"
+                            @click="destroy(form)"
                         />
                     </div>
                 </UPageCard>
             </div>
 
-            <UModal v-model:open="open" title="New form">
+            <UModal v-model:open="open" title="Novo formulário">
                 <template #body>
                     <form class="space-y-4" @submit.prevent="createForm">
-                        <UFormField label="Name" required>
+                        <UFormField
+                            label="Nome"
+                            required
+                            :error="newForm.errors.name"
+                        >
                             <UInput
                                 v-model="newForm.name"
                                 class="w-full"
@@ -127,7 +138,13 @@ function destroy(id: string) {
                         </UFormField>
 
                         <div class="space-y-2">
-                            <p class="text-sm font-medium">Fields</p>
+                            <p class="text-sm font-medium">Campos</p>
+                            <p
+                                v-if="newForm.errors.fields"
+                                class="text-sm text-error"
+                            >
+                                {{ newForm.errors.fields }}
+                            </p>
                             <div
                                 v-for="(field, index) in newForm.fields"
                                 :key="index"
@@ -135,7 +152,8 @@ function destroy(id: string) {
                             >
                                 <UInput
                                     v-model="field.name"
-                                    placeholder="field name"
+                                    placeholder="nome do campo"
+                                    aria-label="Nome do campo"
                                     class="flex-1"
                                 />
                                 <USelect
@@ -148,22 +166,24 @@ function destroy(id: string) {
                                         'tel',
                                         'url',
                                     ]"
+                                    aria-label="Tipo do campo"
                                     class="w-32"
                                 />
                                 <UCheckbox
                                     v-model="field.required"
-                                    label="Req."
+                                    label="Obrig."
                                 />
                                 <UButton
                                     icon="i-lucide-trash-2"
                                     size="xs"
                                     color="error"
                                     variant="ghost"
+                                    aria-label="Remover campo"
                                     @click="removeField(index)"
                                 />
                             </div>
                             <UButton
-                                label="Add field"
+                                label="Adicionar campo"
                                 icon="i-lucide-plus"
                                 variant="soft"
                                 size="sm"
@@ -171,7 +191,12 @@ function destroy(id: string) {
                             />
                         </div>
 
-                        <UButton type="submit" label="Create form" block />
+                        <UButton
+                            type="submit"
+                            label="Criar formulário"
+                            block
+                            :loading="newForm.processing"
+                        />
                     </form>
                 </template>
             </UModal>

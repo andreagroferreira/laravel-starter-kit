@@ -9,9 +9,9 @@ use App\Mcp\Concerns\EnforcesAbilities;
 use App\Models\Site;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\PageBlockSynchronizer;
 use App\Support\CurrentTenant;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
@@ -52,17 +52,7 @@ final class UpdateBlocksTool extends Tool
             return Response::error(sprintf('Page [%s] not found in site [%s].', $data['page_slug'], $data['site_slug']));
         }
 
-        DB::transaction(function () use ($page, $data): void {
-            $page->blocks()->delete();
-
-            foreach ($data['blocks'] as $index => $block) {
-                $page->blocks()->create([
-                    'type' => $block['type'],
-                    'content' => $block['content'] ?? null,
-                    'sort_order' => $index,
-                ]);
-            }
-        });
+        resolve(PageBlockSynchronizer::class)->sync($page, $data['blocks']);
 
         $user = $request->user();
 

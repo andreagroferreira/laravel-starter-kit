@@ -1,87 +1,82 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { computed, reactive, ref } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import PaginationBar from '@/components/shared/PaginationBar.vue';
+import SearchInput from '@/components/shared/SearchInput.vue';
+import { useConfirm } from '@/composables/useConfirm';
+import { statusColor, statusLabel } from '@/composables/useStatusColor';
+import { useTableQuery } from '@/composables/useTableQuery';
+import type { Category, Post, Site } from '@/types/models';
+import type { Paginated } from '@/types/pagination';
+import { formatDate } from '@/utils/format';
 import AppLayout from '../../layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout });
 
-interface PostRow {
-    id: string;
-    title: string;
-    slug: string;
-    status: string;
-    excerpt: string | null;
-    published_at: string | null;
-    categories: { id: string; name: string }[];
-}
-
 const props = defineProps<{
-    site: { id: string; name: string; slug: string };
-    posts: { data: PostRow[] };
-    categories: { id: string; name: string }[];
+    site: Pick<Site, 'id' | 'name' | 'slug'>;
+    posts: Paginated<Post>;
+    categories: Category[];
+    filters: { search: string; status: string; category: string };
 }>();
 
-const search = ref('');
-const statusFilter = ref<string | null>(null);
+const confirm = useConfirm();
 
-const filtered = computed(() =>
-    props.posts.data.filter((post) => {
-        const matchesSearch =
-            search.value === '' ||
-            post.title.toLowerCase().includes(search.value.toLowerCase()) ||
-            post.slug.toLowerCase().includes(search.value.toLowerCase());
-        const matchesStatus =
-            statusFilter.value === null || post.status === statusFilter.value;
-
-        return matchesSearch && matchesStatus;
-    }),
-);
-
-const open = ref(false);
-const form = reactive({
-    title: '',
-    slug: '',
+const { state, goToPage } = useTableQuery({
+    only: ['posts', 'filters'],
+    filters: { status: props.filters.status, category: props.filters.category },
 });
 
+const open = ref(false);
+const form = useForm({ title: '', slug: '' });
+
 function createPost() {
-    router.post(
-        `/sites/${props.site.id}/posts`,
-        { ...form },
-        {
-            onSuccess: () => {
-                open.value = false;
-                form.title = '';
-                form.slug = '';
-            },
+    form.post(`/sites/${props.site.id}/posts`, {
+        onSuccess: () => {
+            open.value = false;
+            form.reset();
         },
-    );
+    });
 }
 
-function statusColor(status: string): 'success' | 'warning' | 'neutral' {
-    if (status === 'published') return 'success';
-    if (status === 'scheduled') return 'warning';
+async function destroyPost(post: Post) {
+    const confirmed = await confirm({
+        title: `Apagar «${post.title}»?`,
+        description: 'O artigo fica recuperável durante 30 dias.',
+        confirmLabel: 'Apagar',
+    });
 
-    return 'neutral';
+    if (confirmed) {
+        router.delete(`/sites/${props.site.id}/posts/${post.id}`, {
+            preserveScroll: true,
+        });
+    }
 }
+
+const hasActiveFilters = () =>
+    state.search !== '' ||
+    state.filters.status !== '' ||
+    state.filters.category !== '';
 </script>
 
 <template>
-    <Head :title="`Posts — ${site.name}`" />
+    <Head :title="`Artigos — ${site.name}`" />
 
     <UDashboardPanel id="posts">
         <template #header>
-            <UDashboardNavbar :title="`Posts — ${site.name}`">
+            <UDashboardNavbar :title="`Artigos — ${site.name}`">
                 <template #leading>
                     <UDashboardSidebarCollapse />
                     <UButton
                         icon="i-lucide-arrow-left"
                         variant="ghost"
                         :to="`/sites/${site.id}`"
+                        aria-label="Voltar ao site"
                     />
                 </template>
                 <template #right>
                     <UButton
-                        label="New post"
+                        label="Novo artigo"
                         icon="i-lucide-plus"
                         @click="open = true"
                     />
@@ -89,22 +84,33 @@ function statusColor(status: string): 'success' | 'warning' | 'neutral' {
             </UDashboardNavbar>
 
             <UDashboardToolbar>
-                <div class="flex w-full items-center gap-2 px-2">
-                    <UInput
-                        v-model="search"
-                        icon="i-lucide-search"
-                        placeholder="Search posts…"
-                        class="max-w-xs"
+                <div class="flex w-full flex-wrap items-center gap-2 px-2">
+                    <SearchInput
+                        v-model="state.search"
+                        placeholder="Pesquisar artigos…"
                     />
                     <USelect
-                        v-model="statusFilter"
+                        v-model="state.filters.status"
                         :items="[
-                            { label: 'All statuses', value: null },
-                            { label: 'Draft', value: 'draft' },
-                            { label: 'Published', value: 'published' },
-                            { label: 'Scheduled', value: 'scheduled' },
+                            { label: 'Todos os estados', value: '' },
+                            { label: 'Rascunho', value: 'draft' },
+                            { label: 'Publicado', value: 'published' },
+                            { label: 'Agendado', value: 'scheduled' },
                         ]"
-                        class="w-40"
+                        class="w-44"
+                        aria-label="Filtrar por estado"
+                    />
+                    <USelect
+                        v-model="state.filters.category"
+                        :items="[
+                            { label: 'Todas as categorias', value: '' },
+                            ...categories.map((category) => ({
+                                label: category.name,
+                                value: category.id,
+                            })),
+                        ]"
+                        class="w-48"
+                        aria-label="Filtrar por categoria"
                     />
                 </div>
             </UDashboardToolbar>
@@ -113,16 +119,24 @@ function statusColor(status: string): 'success' | 'warning' | 'neutral' {
         <template #body>
             <div class="p-4 lg:p-6">
                 <UEmpty
-                    v-if="filtered.length === 0"
-                    title="No posts found"
+                    v-if="posts.data.length === 0 && !hasActiveFilters()"
+                    title="Ainda não há artigos"
+                    description="Cria o primeiro artigo deste site."
                     icon="i-lucide-newspaper"
                     :actions="[
                         {
-                            label: 'New post',
+                            label: 'Novo artigo',
                             icon: 'i-lucide-plus',
                             onClick: () => (open = true),
                         },
                     ]"
+                />
+
+                <UEmpty
+                    v-else-if="posts.data.length === 0"
+                    title="Sem resultados"
+                    description="Nenhum artigo corresponde à pesquisa ou filtros."
+                    icon="i-lucide-search-x"
                 />
 
                 <div
@@ -130,15 +144,15 @@ function statusColor(status: string): 'success' | 'warning' | 'neutral' {
                     class="divide-y divide-default rounded-lg border border-default"
                 >
                     <div
-                        v-for="post in filtered"
+                        v-for="post in posts.data"
                         :key="post.id"
-                        class="flex items-center justify-between p-4 hover:bg-elevated/40"
+                        class="flex flex-wrap items-center justify-between gap-2 p-4 hover:bg-elevated/40"
                     >
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             <p class="truncate font-medium">{{ post.title }}</p>
                             <p class="truncate text-sm text-muted">
                                 /{{ post.slug }}
-                                <span v-if="post.categories.length">
+                                <span v-if="post.categories?.length">
                                     ·
                                     {{
                                         post.categories
@@ -147,13 +161,13 @@ function statusColor(status: string): 'success' | 'warning' | 'neutral' {
                                     }}
                                 </span>
                                 <span v-if="post.published_at">
-                                    · {{ post.published_at }}</span
+                                    · {{ formatDate(post.published_at) }}</span
                                 >
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
                             <UBadge
-                                :label="post.status"
+                                :label="statusLabel(post.status)"
                                 :color="statusColor(post.status)"
                                 variant="subtle"
                             />
@@ -162,26 +176,50 @@ function statusColor(status: string): 'success' | 'warning' | 'neutral' {
                                 size="xs"
                                 variant="ghost"
                                 :to="`/sites/${site.id}/posts/${post.id}`"
+                                aria-label="Editar artigo"
+                            />
+                            <UButton
+                                icon="i-lucide-trash-2"
+                                size="xs"
+                                color="error"
+                                variant="ghost"
+                                aria-label="Apagar artigo"
+                                @click="destroyPost(post)"
                             />
                         </div>
                     </div>
                 </div>
+
+                <PaginationBar :paginator="posts" @update:page="goToPage" />
             </div>
 
-            <UModal v-model:open="open" title="New post">
+            <UModal v-model:open="open" title="Novo artigo">
                 <template #body>
                     <form class="space-y-4" @submit.prevent="createPost">
-                        <UFormField label="Title" required>
+                        <UFormField
+                            label="Título"
+                            required
+                            :error="form.errors.title"
+                        >
                             <UInput
                                 v-model="form.title"
                                 class="w-full"
                                 autofocus
                             />
                         </UFormField>
-                        <UFormField label="Slug" required>
+                        <UFormField
+                            label="Slug"
+                            required
+                            :error="form.errors.slug"
+                        >
                             <UInput v-model="form.slug" class="w-full" />
                         </UFormField>
-                        <UButton type="submit" label="Create post" block />
+                        <UButton
+                            type="submit"
+                            label="Criar artigo"
+                            block
+                            :loading="form.processing"
+                        />
                     </form>
                 </template>
             </UModal>

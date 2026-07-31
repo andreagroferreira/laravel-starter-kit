@@ -19,6 +19,7 @@ final class MembersController
 
         return Inertia::render('Settings/Members', [
             'members' => $tenant->users()
+                ->with('roles:id,name')
                 ->get(['users.id', 'users.name', 'users.email'])
                 ->map(fn (User $user): array => [
                     'id' => $user->id,

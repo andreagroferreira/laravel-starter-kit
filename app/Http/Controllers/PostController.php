@@ -8,22 +8,35 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\Site;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 final class PostController
 {
-    public function index(Site $site): Response
+    public function index(Request $request, Site $site): Response
     {
+        $search = (string) $request->query('search', '');
+        $status = (string) $request->query('status', '');
+        $category = (string) $request->query('category', '');
+
         return Inertia::render('Posts/Index', [
             'site' => $site->only('id', 'name', 'slug'),
             'posts' => $site->posts()
                 ->with('categories:id,name')
+                ->when($search !== '', fn (Builder $query) => $query->where(fn (Builder $inner) => $inner
+                    ->whereLike('title', '%'.$search.'%')
+                    ->orWhereLike('slug', '%'.$search.'%')))
+                ->when($status !== '', fn (Builder $query) => $query->where('status', $status))
+                ->when($category !== '', fn (Builder $query) => $query->whereHas('categories', fn (Builder $inner) => $inner->where('categories.id', $category)))
                 ->latest()
-                ->paginate(15),
+                ->paginate(15)
+                ->withQueryString(),
             'categories' => $site->categories()->orderBy('name')->get(['id', 'name']),
+            'filters' => ['search' => $search, 'status' => $status, 'category' => $category],
         ]);
     }
 

@@ -4,25 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Settings;
 
+use App\Http\Requests\StoreTokenRequest;
 use App\Models\Tenant;
 use App\Support\CurrentTenant;
+use App\Support\TokenAbilities;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Laravel\Sanctum\PersonalAccessToken;
 
 final class TokenController
 {
-    /**
-     * Available MCP/API scopes.
-     *
-     * @var list<string>
-     */
-    public const array ABILITIES = ['read', 'write:draft', 'publish', 'admin'];
-
     public function show(): Response
     {
         /** @var Tenant $tenant */
@@ -43,21 +37,15 @@ final class TokenController
                     'last_used_at' => $token->last_used_at?->diffForHumans(),
                     'created_at' => $token->created_at?->toDateString(),
                 ]),
-            'availableAbilities' => self::ABILITIES,
+            'availableAbilities' => TokenAbilities::ALL,
             'mcpEndpoint' => url('/mcp/wizard'),
             'tenant' => $tenant->only('name', 'slug'),
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StoreTokenRequest $request): RedirectResponse
     {
-        Gate::authorize('manageTokens', resolve(CurrentTenant::class)->getOrFail());
-
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'abilities' => ['required', 'array', 'min:1'],
-            'abilities.*' => [Rule::in(self::ABILITIES)],
-        ]);
+        $validated = $request->validated();
 
         /** @var array{name: string, abilities: list<string>} $abilities */
         $abilities = $validated;

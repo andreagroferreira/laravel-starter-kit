@@ -8,11 +8,14 @@ use App\Enums\SiteType;
 use App\Models\Concerns\BelongsToTenant;
 use Carbon\CarbonInterface;
 use Database\Factories\SiteFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property-read string $id
@@ -36,6 +39,8 @@ final class Site extends Model
     use HasFactory;
 
     use HasUuids;
+    use Prunable;
+    use SoftDeletes;
 
     /**
      * @return array<string, string>
@@ -119,5 +124,15 @@ final class Site extends Model
     public function categories(): HasMany
     {
         return $this->hasMany(Category::class);
+    }
+
+    /**
+     * Soft-deleted content is permanently removed after 30 days.
+     *
+     * @return Builder<static>
+     */
+    public function prunable(): Builder
+    {
+        return self::query()->withoutGlobalScopes()->onlyTrashed()->where('deleted_at', '<=', now()->subDays(30));
     }
 }

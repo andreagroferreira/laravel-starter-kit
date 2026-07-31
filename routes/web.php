@@ -23,7 +23,6 @@ use App\Http\Controllers\Settings\BillingPortalController;
 use App\Http\Controllers\Settings\BrandProfileController;
 use App\Http\Controllers\Settings\InviteMemberController;
 use App\Http\Controllers\Settings\MembersController;
-use App\Http\Controllers\Settings\NotificationsController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\RemoveMemberController;
 use App\Http\Controllers\Settings\SecurityController;
@@ -90,7 +89,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::post('/api/tokens', [TokenController::class, 'store'])->name('api.tokens.store');
         Route::delete('/api/tokens/{tokenId}', [TokenController::class, 'destroy'])->name('api.tokens.destroy');
         Route::get('/audit', AuditLogController::class)->name('audit');
-        Route::get('/notifications', NotificationsController::class)->name('notifications');
         Route::get('/security', SecurityController::class)->name('security');
         Route::get('/billing', [BillingController::class, 'show'])->name('billing');
         Route::get('/billing/checkout/{plan}', BillingCheckoutController::class)->name('billing.checkout');

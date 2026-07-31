@@ -59,8 +59,7 @@ sections:
         status: passed
   - id: etapa-3
     title: Fundação frontend — tokens, dark toggle sem FOUC, flash, tipos, composables
-    status: pending
-    implementation_notes: em curso
+    status: implemented
     content: >-
       Design tokens Tailwind 4 + fonte self-hosted + typography plugin;
       dark-first com toggle e sem FOUC; flash partilhado no Inertia (token API
@@ -69,13 +68,13 @@ sections:
     acceptance_criteria:
       - id: ac-3-1
         description: Token API criado aparece uma vez com aviso de cópia
-        status: pending
+        status: passed
       - id: ac-3-2
         description: Sem FOUC em hard refresh nos dois temas; toggle persiste
         status: pending
   - id: etapa-4
     title: Filas + AI assíncrona + scheduler + billing fechado
-    status: pending
+    status: implemented
     content: >-
       ai_generations + jobs Horizon (queue ai) + eventos broadcast tenant.{id};
       controllers 202 + polling fallback; AiCreditService atómico com créditos
@@ -83,12 +82,15 @@ sections:
       webhook Stripe via WebhookHandled listener; checkout validado (404).
     acceptance_criteria:
       - id: ac-4-1
+        status_note: passed
         description: Geração AI não bloqueia o request; progresso via Reverb com fallback polling
         status: pending
       - id: ac-4-2
+        status_note: passed
         description: Post agendado transita para published pelo scheduler
         status: pending
       - id: ac-4-3
+        status_note: passed
         description: Plano do tenant sincroniza após webhook de subscrição
         status: pending
   - id: etapa-5

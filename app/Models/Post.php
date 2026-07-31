@@ -11,8 +11,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property-read string $id
@@ -36,6 +38,8 @@ final class Post extends Model
     use HasFactory;
 
     use HasUuids;
+    use Prunable;
+    use SoftDeletes;
 
     /**
      * @return array<string, string>
@@ -91,5 +95,15 @@ final class Post extends Model
     {
         return $query->where('status', ContentStatus::Published)
             ->where(fn (Builder $q) => $q->whereNull('published_at')->orWhere('published_at', '<=', now()));
+    }
+
+    /**
+     * Soft-deleted content is permanently removed after 30 days.
+     *
+     * @return Builder<static>
+     */
+    public function prunable(): Builder
+    {
+        return self::query()->withoutGlobalScopes()->onlyTrashed()->where('deleted_at', '<=', now()->subDays(30));
     }
 }

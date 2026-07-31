@@ -9,6 +9,7 @@ use App\Http\Requests\StorePageRequest;
 use App\Http\Requests\UpdatePageRequest;
 use App\Models\Page;
 use App\Models\Site;
+use App\Services\PageBlockSynchronizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -48,15 +49,7 @@ final class PageController
             $page->update(collect($validated)->except('blocks')->all());
 
             if (array_key_exists('blocks', $validated)) {
-                $page->blocks()->delete();
-
-                foreach ($validated['blocks'] ?? [] as $index => $block) {
-                    $page->blocks()->create([
-                        'type' => $block['type'],
-                        'content' => $block['content'] ?? null,
-                        'sort_order' => $index,
-                    ]);
-                }
+                resolve(PageBlockSynchronizer::class)->sync($page, $validated['blocks'] ?? []);
             }
         });
 
