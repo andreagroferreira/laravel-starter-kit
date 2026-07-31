@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import { Head } from '@inertiajs/vue3';
+import type { FormSubmitEvent } from '@nuxt/ui';
+import { reactive, ref } from 'vue';
 import * as z from 'zod';
-import {reactive, ref} from 'vue';
-import {Head} from '@inertiajs/vue3';
-import type {FormSubmitEvent} from '@nuxt/ui';
-import AppLayout from '../../layouts/AppLayout.vue';
 import SettingsLayout from '../../components/settings/SettingsLayout.vue';
+import AppLayout from '../../layouts/AppLayout.vue';
 
-defineOptions({layout: AppLayout});
+defineOptions({ layout: AppLayout });
 
 const fileRef = ref<HTMLInputElement>();
 
@@ -85,7 +85,7 @@ function onFileClick() {
                     label="Name"
                     description="Will appear on receipts, invoices, and other communication."
                     required
-                    class="flex max-sm:flex-col justify-between items-start gap-4"
+                    class="flex items-start justify-between gap-4 max-sm:flex-col"
                 >
                     <UInput v-model="profile.name" autocomplete="off" />
                 </UFormField>
@@ -95,7 +95,7 @@ function onFileClick() {
                     label="Email"
                     description="Used to sign in, for email receipts and product updates."
                     required
-                    class="flex max-sm:flex-col justify-between items-start gap-4"
+                    class="flex items-start justify-between gap-4 max-sm:flex-col"
                 >
                     <UInput
                         v-model="profile.email"
@@ -109,7 +109,7 @@ function onFileClick() {
                     label="Username"
                     description="Your unique username for logging in and your profile URL."
                     required
-                    class="flex max-sm:flex-col justify-between items-start gap-4"
+                    class="flex items-start justify-between gap-4 max-sm:flex-col"
                 >
                     <UInput
                         v-model="profile.username"
@@ -122,7 +122,7 @@ function onFileClick() {
                     name="avatar"
                     label="Avatar"
                     description="JPG, GIF or PNG. 1MB Max."
-                    class="flex max-sm:flex-col justify-between sm:items-center gap-4"
+                    class="flex justify-between gap-4 max-sm:flex-col sm:items-center"
                 >
                     <div class="flex flex-wrap items-center gap-3">
                         <UAvatar
@@ -141,7 +141,7 @@ function onFileClick() {
                             class="hidden"
                             accept=".jpg, .jpeg, .png, .gif"
                             @change="onFileChange"
-                        >
+                        />
                     </div>
                 </UFormField>
                 <USeparator />
@@ -149,8 +149,8 @@ function onFileClick() {
                     name="bio"
                     label="Bio"
                     description="Brief description for your profile. URLs are hyperlinked."
-                    class="flex max-sm:flex-col justify-between items-start gap-4"
-                    :ui="{container: 'w-full'}"
+                    class="flex items-start justify-between gap-4 max-sm:flex-col"
+                    :ui="{ container: 'w-full' }"
                 >
                     <UTextarea
                         v-model="profile.bio"

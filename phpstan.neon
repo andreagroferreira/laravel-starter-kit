@@ -13,6 +13,20 @@ parameters:
         - public
         - routes
 
+    excludePaths:
+        # Vendor-published stubs (generated third-party code)
+        - config/fortify.php
+        - config/permission.php
+        - config/horizon.php
+        - database/migrations/2026_07_30_191638_create_permission_tables.php
+        - database/migrations/2026_07_30_191638_create_personal_access_tokens_table.php
+        - database/migrations/2026_07_30_191638_add_two_factor_columns_to_users_table.php
+        - database/migrations/2026_07_30_192204_create_customer_columns.php
+        - database/migrations/2026_07_30_192205_create_subscriptions_table.php
+        - database/migrations/2026_07_30_191639_create_passkeys_table.php
+        - database/migrations/2026_07_30_191640_create_subscription_items_table.php
+        - database/migrations/2026_07_30_191641_add_meter_id_to_subscription_items_table.php
+        - database/migrations/2026_07_30_191642_add_meter_event_name_to_subscription_items_table.php
 
     level: max
 

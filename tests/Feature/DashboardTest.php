@@ -2,79 +2,67 @@
 
 declare(strict_types=1);
 
+use App\Models\AiUsage;
+use App\Models\Post;
+use App\Models\Site;
+use App\Models\Tenant;
+use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-it('renders the dashboard home', function (): void {
-    $this->get('/')
-        ->assertOk()
-        ->assertInertia(fn (Assert $page): Assert => $page->component('Dashboard/Index'));
+beforeEach(function (): void {
+    $this->tenant = Tenant::factory()->create();
+    $this->user = User::factory()->create(['current_tenant_id' => $this->tenant->id]);
+    $this->tenant->users()->attach($this->user);
 });
 
-it('renders the inbox with mails', function (): void {
-    $this->get('/inbox')
-        ->assertOk()
-        ->assertInertia(fn (Assert $page): Assert => $page
-            ->component('Inbox')
-            ->has('mails', 12)
-            ->has('mails.0', fn (Assert $mail): Assert => $mail
-                ->has('id')
-                ->has('unread')
-                ->has('from')
-                ->has('subject')
-                ->has('body')
-                ->has('date')
-            )
-        );
-});
+it('renders the dashboard with real tenant stats', function (): void {
+    $site = Site::factory()->for($this->tenant)->create();
+    $site->pages()->create(['title' => 'Home', 'slug' => '/', 'status' => 'draft']);
+    Post::factory()->for($site)->create();
+    AiUsage::factory()->for($this->tenant)->count(2)->create(['credits' => 3]);
 
-it('renders customers with data', function (): void {
-    $this->get('/customers')
+    $this->actingAs($this->user)
+        ->get('/')
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page
-            ->component('Customers')
-            ->has('customers', 20)
-            ->has('customers.0', fn (Assert $customer): Assert => $customer
-                ->has('id')
-                ->has('name')
-                ->has('username')
-                ->has('email')
-                ->has('avatar')
-                ->has('status')
-                ->has('location')
-            )
+            ->component('Dashboard/Index')
+            ->where('stats.sites', 1)
+            ->where('stats.pages', 1)
+            ->where('stats.posts', 1)
+            ->where('stats.ai_credits_used', 6)
+            ->where('stats.ai_credits_monthly', $this->tenant->ai_credits_monthly)
+            ->has('sites', 1)
         );
 });
 
 it('renders settings profile', function (): void {
-    $this->get('/settings')
+    $this->actingAs($this->user)
+        ->get('/settings')
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page->component('Settings/Profile'));
 });
 
-it('renders settings members with data', function (): void {
-    $this->get('/settings/members')
+it('renders settings members with real tenant members', function (): void {
+    $this->actingAs($this->user)
+        ->get('/settings/members')
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page
             ->component('Settings/Members')
-            ->has('members', 8)
+            ->has('members', 1)
+            ->where('members.0.email', $this->user->email)
         );
 });
 
 it('renders settings notifications', function (): void {
-    $this->get('/settings/notifications')
+    $this->actingAs($this->user)
+        ->get('/settings/notifications')
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page->component('Settings/Notifications'));
 });
 
 it('renders settings security', function (): void {
-    $this->get('/settings/security')
+    $this->actingAs($this->user)
+        ->get('/settings/security')
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page->component('Settings/Security'));
-});
-
-it('does not eagerly share notifications on full page loads', function (): void {
-    // `notifications` is an Inertia optional prop — it must not be resolved on a
-    // regular page load, only when the slideover requests it via partial reload.
-    $this->get('/')
-        ->assertInertia(fn (Assert $page): Assert => $page->missing('notifications'));
 });

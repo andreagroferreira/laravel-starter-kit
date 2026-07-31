@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Providers\HorizonServiceProvider;
+
 arch()->preset()->php();
 arch()->preset()->strict()->ignoring([
     // Horizon's service provider must override the framework's protected gate() method.
-    App\Providers\HorizonServiceProvider::class,
+    HorizonServiceProvider::class,
 ]);
 arch()->preset()->laravel();
 arch()->preset()->security()->ignoring([

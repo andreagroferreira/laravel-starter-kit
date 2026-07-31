@@ -1,133 +1,83 @@
 <script setup lang="ts">
-import {computed, ref} from 'vue';
-import {usePage} from '@inertiajs/vue3';
-import {useStorage} from '@vueuse/core';
-import type {NavigationMenuItem} from '@nuxt/ui';
+import { usePage } from '@inertiajs/vue3';
+import type { NavigationMenuItem } from '@nuxt/ui';
+import { computed, ref } from 'vue';
 import TeamsMenu from '../components/TeamsMenu.vue';
 import UserMenu from '../components/UserMenu.vue';
-import NotificationsSlideover from '../components/NotificationsSlideover.vue';
 
-const toast = useToast();
 const page = usePage();
 
 const open = ref(false);
 
-const links = [
+const currentUrl = computed(() => page.url);
+
+const links = computed<NavigationMenuItem[][]>(() => [
     [
         {
-            label: 'Home',
-            icon: 'i-lucide-house',
+            label: 'Dashboard',
+            icon: 'i-lucide-layout-dashboard',
             to: '/',
+            exact: true,
             onSelect: () => {
                 open.value = false;
             },
         },
         {
-            label: 'Inbox',
-            icon: 'i-lucide-inbox',
-            to: '/inbox',
-            badge: '4',
+            label: 'Sites',
+            icon: 'i-lucide-globe',
+            to: '/sites',
             onSelect: () => {
                 open.value = false;
             },
         },
         {
-            label: 'Customers',
-            icon: 'i-lucide-users',
-            to: '/customers',
+            label: 'Media',
+            icon: 'i-lucide-image',
+            to: '/media',
             onSelect: () => {
                 open.value = false;
             },
         },
+        {
+            label: 'AI Copilot',
+            icon: 'i-lucide-sparkles',
+            to: '/ai',
+            onSelect: () => {
+                open.value = false;
+            },
+        },
+    ],
+    [
         {
             label: 'Settings',
-            to: '/settings',
             icon: 'i-lucide-settings',
-            defaultOpen: true,
+            to: '/settings',
+            defaultOpen: currentUrl.value.startsWith('/settings'),
             type: 'trigger',
             children: [
-                {
-                    label: 'General',
-                    to: '/settings',
-                    exact: true,
-                    onSelect: () => {
-                        open.value = false;
-                    },
-                },
-                {
-                    label: 'Members',
-                    to: '/settings/members',
-                    onSelect: () => {
-                        open.value = false;
-                    },
-                },
-                {
-                    label: 'Notifications',
-                    to: '/settings/notifications',
-                    onSelect: () => {
-                        open.value = false;
-                    },
-                },
-                {
-                    label: 'Security',
-                    to: '/settings/security',
-                    onSelect: () => {
-                        open.value = false;
-                    },
-                },
+                { label: 'General', to: '/settings', exact: true },
+                { label: 'Members', to: '/settings/members' },
+                { label: 'Brand voice', to: '/settings/brand' },
+                { label: 'API & MCP', to: '/settings/api' },
+                { label: 'Security', to: '/settings/security' },
+                { label: 'Billing', to: '/settings/billing' },
+                { label: 'Audit log', to: '/settings/audit' },
             ],
         },
     ],
-    [
-        {
-            label: 'Feedback',
-            icon: 'i-lucide-message-circle',
-            to: 'https://github.com/nuxt-ui-templates/dashboard-vue',
-            target: '_blank',
-        },
-        {
-            label: 'Help & Support',
-            icon: 'i-lucide-info',
-            to: 'https://github.com/nuxt/ui',
-            target: '_blank',
-        },
-    ],
-] satisfies NavigationMenuItem[][];
+]);
 
 const groups = computed(() => [
     {
         id: 'links',
         label: 'Go to',
-        items: links.flat(),
+        items: links.value.flatMap((group) =>
+            group.flatMap((item) =>
+                item.children ? [item, ...item.children] : [item],
+            ),
+        ),
     },
 ]);
-
-const cookie = useStorage('cookie-consent', 'pending');
-if (cookie.value !== 'accepted') {
-    toast.add({
-        title: 'We use first-party cookies to enhance your experience on our website.',
-        duration: 0,
-        close: false,
-        actions: [
-            {
-                label: 'Accept',
-                color: 'neutral',
-                variant: 'outline',
-                onClick: () => {
-                    cookie.value = 'accepted';
-                },
-            },
-            {
-                label: 'Opt out',
-                color: 'neutral',
-                variant: 'ghost',
-                onClick: () => {
-                    cookie.value = 'declined';
-                },
-            },
-        ],
-    });
-}
 </script>
 
 <template>
@@ -138,13 +88,13 @@ if (cookie.value !== 'accepted') {
             collapsible
             resizable
             class="bg-elevated/25"
-            :ui="{footer: 'lg:border-t lg:border-default'}"
+            :ui="{ footer: 'lg:border-t lg:border-default' }"
         >
-            <template #header="{collapsed}">
+            <template #header="{ collapsed }">
                 <TeamsMenu :collapsed="collapsed" />
             </template>
 
-            <template #default="{collapsed}">
+            <template #default="{ collapsed }">
                 <UDashboardSearchButton
                     :collapsed="collapsed"
                     class="bg-transparent ring-default"
@@ -167,7 +117,7 @@ if (cookie.value !== 'accepted') {
                 />
             </template>
 
-            <template #footer="{collapsed}">
+            <template #footer="{ collapsed }">
                 <UserMenu :collapsed="collapsed" />
             </template>
         </UDashboardSidebar>
@@ -175,7 +125,5 @@ if (cookie.value !== 'accepted') {
         <UDashboardSearch :groups="groups" />
 
         <slot />
-
-        <NotificationsSlideover />
     </UDashboardGroup>
 </template>

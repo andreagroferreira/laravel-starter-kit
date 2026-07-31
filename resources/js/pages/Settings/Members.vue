@@ -1,73 +1,153 @@
 <script setup lang="ts">
-import {computed, ref} from 'vue';
-import {Head} from '@inertiajs/vue3';
-import AppLayout from '../../layouts/AppLayout.vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { computed, reactive, ref } from 'vue';
 import SettingsLayout from '../../components/settings/SettingsLayout.vue';
-import SettingsMembersList from '../../components/settings/SettingsMembersList.vue';
-import type {Member} from '../../types';
+import AppLayout from '../../layouts/AppLayout.vue';
 
-defineOptions({layout: AppLayout});
+defineOptions({ layout: AppLayout });
+
+interface Member {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+}
 
 const props = defineProps<{
     members: Member[];
 }>();
 
-const q = ref('');
+const page = usePage();
+const toast = useToast();
 
-const filteredMembers = computed(() => {
-    const needle = q.value.trim().toLowerCase();
+const currentUserId = computed(
+    () => (page.props.auth?.user as { id?: string } | undefined)?.id,
+);
 
-    if (needle === '') {
-        return props.members;
-    }
-
-    return props.members.filter(
-        (member) =>
-            member.name.toLowerCase().includes(needle) ||
-            member.username.toLowerCase().includes(needle),
-    );
+const open = ref(false);
+const invite = reactive({
+    email: '',
+    role: 'editor',
 });
+
+const roles = [
+    { label: 'Owner', value: 'owner' },
+    { label: 'Editor', value: 'editor' },
+    { label: 'Marketeer', value: 'marketeer' },
+    { label: 'Journalist', value: 'journalist' },
+    { label: 'Editor in chief', value: 'editor_in_chief' },
+];
+
+function inviteMember() {
+    router.post(
+        '/settings/members',
+        { ...invite },
+        {
+            onSuccess: () => {
+                open.value = false;
+                invite.email = '';
+                invite.role = 'editor';
+                toast.add({ title: 'Member invited', color: 'success' });
+            },
+        },
+    );
+}
+
+function remove(member: Member) {
+    router.delete(`/settings/members/${member.id}`, {
+        onSuccess: () =>
+            toast.add({ title: 'Member removed', color: 'success' }),
+    });
+}
 </script>
 
 <template>
     <Head title="Members" />
 
     <SettingsLayout>
-        <div>
-            <UPageCard
-                title="Members"
-                description="Invite new members by email address."
-                variant="naked"
-                orientation="horizontal"
-                class="mb-4"
-            >
-                <UButton
-                    label="Invite people"
-                    color="neutral"
-                    class="w-fit lg:ms-auto"
-                />
-            </UPageCard>
+        <UPageCard
+            title="Members"
+            description="Quem tem acesso a este workspace e com que role."
+            variant="naked"
+            orientation="horizontal"
+            class="mb-4"
+        >
+            <UButton
+                label="Invite member"
+                icon="i-lucide-user-plus"
+                class="w-fit lg:ms-auto"
+                @click="open = true"
+            />
+        </UPageCard>
 
-            <UPageCard
-                variant="subtle"
-                :ui="{
-                    container: 'p-0 sm:p-0 gap-y-0',
-                    wrapper: 'items-stretch',
-                    header: 'p-4 mb-0 border-b border-default',
-                }"
+        <div class="divide-y divide-default rounded-lg border border-default">
+            <div
+                v-for="member in members"
+                :key="member.id"
+                class="flex items-center justify-between p-3"
             >
-                <template #header>
-                    <UInput
-                        v-model="q"
-                        icon="i-lucide-search"
-                        placeholder="Search members"
-                        autofocus
-                        class="w-full"
+                <div class="flex items-center gap-3">
+                    <UAvatar
+                        :text="
+                            member.name
+                                .split(' ')
+                                .map((p) => p[0])
+                                .join('')
+                                .slice(0, 2)
+                                .toUpperCase()
+                        "
+                        size="sm"
                     />
-                </template>
-
-                <SettingsMembersList :members="filteredMembers" />
-            </UPageCard>
+                    <div>
+                        <p class="text-sm font-medium">
+                            {{ member.name }}
+                            <span
+                                v-if="member.id === currentUserId"
+                                class="text-muted"
+                                >(you)</span
+                            >
+                        </p>
+                        <p class="text-xs text-muted">{{ member.email }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <UBadge
+                        :label="member.role.replace('_', ' ')"
+                        variant="subtle"
+                    />
+                    <UButton
+                        v-if="member.id !== currentUserId"
+                        icon="i-lucide-user-minus"
+                        size="xs"
+                        color="error"
+                        variant="ghost"
+                        @click="remove(member)"
+                    />
+                </div>
+            </div>
         </div>
+
+        <UModal v-model:open="open" title="Invite member">
+            <template #body>
+                <form class="space-y-4" @submit.prevent="inviteMember">
+                    <UFormField label="Email" required>
+                        <UInput
+                            v-model="invite.email"
+                            type="email"
+                            class="w-full"
+                            autofocus
+                        />
+                    </UFormField>
+                    <UFormField label="Role">
+                        <USelect
+                            v-model="invite.role"
+                            :items="roles"
+                            class="w-full"
+                        />
+                    </UFormField>
+                    <UButton type="submit" label="Invite" block />
+                </form>
+            </template>
+        </UModal>
     </SettingsLayout>
 </template>

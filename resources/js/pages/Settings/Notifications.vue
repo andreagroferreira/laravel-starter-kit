@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {reactive} from 'vue';
-import {Head} from '@inertiajs/vue3';
-import AppLayout from '../../layouts/AppLayout.vue';
+import { Head } from '@inertiajs/vue3';
+import { reactive } from 'vue';
 import SettingsLayout from '../../components/settings/SettingsLayout.vue';
+import AppLayout from '../../layouts/AppLayout.vue';
 
-defineOptions({layout: AppLayout});
+defineOptions({ layout: AppLayout });
 
-const state = reactive<{[key: string]: boolean}>({
+const state = reactive<{ [key: string]: boolean }>({
     email: true,
     desktop: false,
     product_updates: true,
@@ -75,7 +75,7 @@ async function onChange() {
 
             <UPageCard
                 variant="subtle"
-                :ui="{container: 'divide-y divide-default'}"
+                :ui="{ container: 'divide-y divide-default' }"
             >
                 <UFormField
                     v-for="field in section.fields"
@@ -83,7 +83,7 @@ async function onChange() {
                     :name="field.name"
                     :label="field.label"
                     :description="field.description"
-                    class="flex items-center justify-between not-last:pb-4 gap-2"
+                    class="flex items-center justify-between gap-2 not-last:pb-4"
                 >
                     <USwitch
                         v-model="state[field.name]"

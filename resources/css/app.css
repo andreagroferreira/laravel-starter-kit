@@ -24,5 +24,9 @@
 }
 
 .dark {
-    --ui-primary: var(--ui-color-primary-500);
+    --ui-primary: var(--ui-color-primary-400);
+}
+
+html {
+    color-scheme: dark;
 }

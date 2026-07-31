@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import { Head } from '@inertiajs/vue3';
+import type { FormError } from '@nuxt/ui';
+import { reactive } from 'vue';
 import * as z from 'zod';
-import {reactive} from 'vue';
-import {Head} from '@inertiajs/vue3';
-import type {FormError} from '@nuxt/ui';
-import AppLayout from '../../layouts/AppLayout.vue';
 import SettingsLayout from '../../components/settings/SettingsLayout.vue';
+import AppLayout from '../../layouts/AppLayout.vue';
 
-defineOptions({layout: AppLayout});
+defineOptions({ layout: AppLayout });
 
 const passwordSchema = z.object({
     current: z.string().min(8, 'Must be at least 8 characters'),
@@ -23,7 +23,7 @@ const password = reactive<Partial<PasswordSchema>>({
 const validate = (state: Partial<PasswordSchema>): FormError[] => {
     const errors: FormError[] = [];
     if (state.current && state.new && state.current === state.new) {
-        errors.push({name: 'new', message: 'Passwords must be different'});
+        errors.push({ name: 'new', message: 'Passwords must be different' });
     }
     return errors;
 };
@@ -42,7 +42,7 @@ const validate = (state: Partial<PasswordSchema>): FormError[] => {
                 :schema="passwordSchema"
                 :state="password"
                 :validate="validate"
-                class="flex flex-col gap-4 max-w-xs"
+                class="flex max-w-xs flex-col gap-4"
             >
                 <UFormField name="current">
                     <UInput

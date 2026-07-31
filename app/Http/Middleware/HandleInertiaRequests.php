@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
-use App\Services\DashboardMockData;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Inertia\Middleware;
 
 final class HandleInertiaRequests extends Middleware
@@ -41,9 +39,9 @@ final class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            // Resolved only on partial reloads that request it (the notifications
-            // slideover), so it never runs on regular page navigations.
-            'notifications' => Inertia::optional(fn (): array => DashboardMockData::notifications()),
+            'auth' => [
+                'user' => $request->user()?->refresh()->only('id', 'name', 'email', 'current_tenant_id'),
+            ],
         ];
     }
 }

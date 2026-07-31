@@ -6,6 +6,8 @@ use Illuminate\Support\Str;
 
 return [
 
+    'allowed_emails' => array_filter(explode(',', (string) env('HORIZON_ALLOWED_EMAILS', ''))),
+
     /*
     |--------------------------------------------------------------------------
     | Horizon Name

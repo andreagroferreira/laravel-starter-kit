@@ -45,6 +45,8 @@ return RectorConfig::configure()
         AddOverrideAttributeToOverriddenMethodsRector::class,
         MakeInheritedMethodVisibilitySameAsParentRector::class,
         AddOverrideAttributeToOverriddenPropertiesRector::class,
+        // Conflicts with the strict arch preset (no protected methods on models).
+        RectorLaravel\Rector\ClassMethod\MakeModelAttributesAndScopesProtectedRector::class,
     ])
     ->withPreparedSets(
         deadCode: true,

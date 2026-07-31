@@ -1,69 +1,34 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { DropdownMenuItem } from '@nuxt/ui'
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 defineProps<{
-  collapsed?: boolean
-}>()
+    collapsed?: boolean;
+}>();
 
-const teams = ref([{
-  label: 'Vue',
-  avatar: {
-    src: 'https://github.com/vuejs.png',
-    alt: 'Vue'
-  }
-}, {
-  label: 'Vite',
-  avatar: {
-    src: 'https://github.com/vitejs.png',
-    alt: 'Vite'
-  }
-}, {
-  label: 'Vitest',
-  avatar: {
-    src: 'https://github.com/vitest-dev.png',
-    alt: 'Vitest'
-  }
-}])
-const selectedTeam = ref(teams.value[0])
+const page = usePage();
 
-const items = computed<DropdownMenuItem[][]>(() => {
-  return [teams.value.map(team => ({
-    ...team,
-    onSelect() {
-      selectedTeam.value = team
-    }
-  })), [{
-    label: 'Create team',
-    icon: 'i-lucide-circle-plus'
-  }, {
-    label: 'Manage teams',
-    icon: 'i-lucide-cog'
-  }]]
-})
+const tenantName = computed(() => {
+    const user = page.props.auth?.user as { name?: string } | undefined;
+
+    return user?.name ?? 'Workspace';
+});
+
+const appName = import.meta.env.VITE_APP_NAME || 'App';
 </script>
 
 <template>
-  <UDropdownMenu
-    :items="items"
-    :content="{ align: 'center', collisionPadding: 12 }"
-    :ui="{ content: collapsed ? 'w-40' : 'w-(--reka-dropdown-menu-trigger-width)' }"
-  >
-    <UButton
-      v-bind="{
-        ...selectedTeam,
-        label: collapsed ? undefined : selectedTeam?.label,
-        trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
-      }"
-      color="neutral"
-      variant="ghost"
-      block
-      :square="collapsed"
-      class="data-[state=open]:bg-elevated"
-      :class="[!collapsed && 'py-2']"
-      :ui="{
-        trailingIcon: 'text-dimmed'
-      }"
-    />
-  </UDropdownMenu>
+    <div class="flex items-center gap-2 overflow-hidden px-1 py-1">
+        <div
+            class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary"
+        >
+            <UIcon name="i-lucide-wand-sparkles" class="size-4" />
+        </div>
+        <div v-if="!collapsed" class="min-w-0">
+            <p class="truncate text-sm font-semibold text-highlighted">
+                {{ appName }}
+            </p>
+            <p class="truncate text-xs text-muted">{{ tenantName }}</p>
+        </div>
+    </div>
 </template>
