@@ -27,10 +27,10 @@ sections:
         verified_by: composer test local
       - id: ac-0-2
         description: CI corre com serviço Postgres e conclui verde
-        status: pending
+        status: passed
   - id: etapa-1
     title: Octane-safety — CurrentTenant scoped + TenantAware job middleware
-    status: pending
+    status: implemented
     content: >-
       app/Support/CurrentTenant registado como scoped substitui
       app()->instance(Tenant::class); BelongsToTenant, middlewares, controllers
@@ -39,13 +39,13 @@ sections:
     acceptance_criteria:
       - id: ac-1-1
         description: Zero app()->instance(Tenant::class) no código de produção
-        status: pending
+        status: passed
       - id: ac-1-2
         description: Teste prova que o tenant não vaza entre lifecycles
-        status: pending
+        status: passed
   - id: etapa-2
     title: RBAC real — RoleMatrix, policies, token abilities
-    status: pending
+    status: implemented
     content: >-
       Matriz permission×role (owner/editor/marketeer/journalist/editor_in_chief),
       TenantProvisioner, 9 policies, authorize() reais, middleware abilities
@@ -53,13 +53,14 @@ sections:
     acceptance_criteria:
       - id: ac-2-1
         description: Membro não-owner não consegue apagar sites, convidar owners nem emitir tokens admin
-        status: pending
+        status: passed
       - id: ac-2-2
         description: Token read não executa tools de escrita MCP
-        status: pending
+        status: passed
   - id: etapa-3
     title: Fundação frontend — tokens, dark toggle sem FOUC, flash, tipos, composables
     status: pending
+    implementation_notes: em curso
     content: >-
       Design tokens Tailwind 4 + fonte self-hosted + typography plugin;
       dark-first com toggle e sem FOUC; flash partilhado no Inertia (token API

@@ -2,8 +2,10 @@
 import { usePage } from '@inertiajs/vue3';
 import type { NavigationMenuItem } from '@nuxt/ui';
 import { computed, ref } from 'vue';
-import TeamsMenu from '../components/TeamsMenu.vue';
-import UserMenu from '../components/UserMenu.vue';
+import TeamsMenu from '@/components/TeamsMenu.vue';
+import UserMenu from '@/components/UserMenu.vue';
+import { useFlashToasts } from '@/composables/useFlashToasts';
+import { mainNavigation, settingsNavigation } from '@/navigation';
 
 const page = usePage();
 
@@ -11,58 +13,27 @@ const open = ref(false);
 
 const currentUrl = computed(() => page.url);
 
+useFlashToasts();
+
+function closeOnSelect(item: NavigationMenuItem): NavigationMenuItem {
+    return {
+        ...item,
+        onSelect: () => {
+            open.value = false;
+        },
+    };
+}
+
 const links = computed<NavigationMenuItem[][]>(() => [
+    mainNavigation.map(closeOnSelect),
     [
         {
-            label: 'Dashboard',
-            icon: 'i-lucide-layout-dashboard',
-            to: '/',
-            exact: true,
-            onSelect: () => {
-                open.value = false;
-            },
-        },
-        {
-            label: 'Sites',
-            icon: 'i-lucide-globe',
-            to: '/sites',
-            onSelect: () => {
-                open.value = false;
-            },
-        },
-        {
-            label: 'Media',
-            icon: 'i-lucide-image',
-            to: '/media',
-            onSelect: () => {
-                open.value = false;
-            },
-        },
-        {
-            label: 'AI Copilot',
-            icon: 'i-lucide-sparkles',
-            to: '/ai',
-            onSelect: () => {
-                open.value = false;
-            },
-        },
-    ],
-    [
-        {
-            label: 'Settings',
+            label: 'Definições',
             icon: 'i-lucide-settings',
             to: '/settings',
             defaultOpen: currentUrl.value.startsWith('/settings'),
             type: 'trigger',
-            children: [
-                { label: 'General', to: '/settings', exact: true },
-                { label: 'Members', to: '/settings/members' },
-                { label: 'Brand voice', to: '/settings/brand' },
-                { label: 'API & MCP', to: '/settings/api' },
-                { label: 'Security', to: '/settings/security' },
-                { label: 'Billing', to: '/settings/billing' },
-                { label: 'Audit log', to: '/settings/audit' },
-            ],
+            children: settingsNavigation.map(closeOnSelect),
         },
     ],
 ]);
@@ -70,7 +41,7 @@ const links = computed<NavigationMenuItem[][]>(() => [
 const groups = computed(() => [
     {
         id: 'links',
-        label: 'Go to',
+        label: 'Ir para',
         items: links.value.flatMap((group) =>
             group.flatMap((item) =>
                 item.children ? [item, ...item.children] : [item],

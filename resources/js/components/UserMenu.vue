@@ -1,35 +1,31 @@
 <script setup lang="ts">
 import { router, usePage } from '@inertiajs/vue3';
 import type { DropdownMenuItem } from '@nuxt/ui';
+import { useColorMode } from '@vueuse/core';
 import { computed } from 'vue';
+import { initials as makeInitials } from '@/utils/format';
 
 defineProps<{
     collapsed?: boolean;
 }>();
 
 const page = usePage();
+const mode = useColorMode();
 
-const user = computed(() => {
-    const authUser = page.props.auth?.user as
-        | { name?: string; email?: string }
-        | undefined;
+const user = computed(() => ({
+    name: page.props.auth.user?.name ?? 'Utilizador',
+    email: page.props.auth.user?.email ?? '',
+}));
 
-    return {
-        name: authUser?.name ?? 'User',
-        email: authUser?.email ?? '',
-    };
-});
+const initials = computed(() => makeInitials(user.value.name));
 
-const initials = computed(() =>
-    user.value.name
-        .split(' ')
-        .map((part) => part.charAt(0))
-        .join('')
-        .slice(0, 2)
-        .toUpperCase(),
-);
+const isDark = computed(() => mode.value === 'dark');
 
-function logout() {
+function toggleTheme(): void {
+    mode.value = isDark.value ? 'light' : 'dark';
+}
+
+function logout(): void {
     router.post('/logout');
 }
 
@@ -43,12 +39,12 @@ const items = computed<DropdownMenuItem[][]>(() => [
     ],
     [
         {
-            label: 'Profile',
+            label: 'Perfil',
             icon: 'i-lucide-user',
             to: '/settings',
         },
         {
-            label: 'Billing',
+            label: 'Faturação',
             icon: 'i-lucide-credit-card',
             to: '/settings/billing',
         },
@@ -60,7 +56,17 @@ const items = computed<DropdownMenuItem[][]>(() => [
     ],
     [
         {
-            label: 'Log out',
+            label: isDark.value ? 'Tema claro' : 'Tema escuro',
+            icon: isDark.value ? 'i-lucide-sun' : 'i-lucide-moon',
+            onSelect: (event: Event) => {
+                event.preventDefault();
+                toggleTheme();
+            },
+        },
+    ],
+    [
+        {
+            label: 'Terminar sessão',
             icon: 'i-lucide-log-out',
             onSelect: logout,
         },
@@ -87,6 +93,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
             :square="collapsed"
             class="data-[state=open]:bg-elevated"
             :ui="{ leadingAvatarSize: 'xs' }"
+            aria-label="Menu do utilizador"
         />
     </UDropdownMenu>
 </template>

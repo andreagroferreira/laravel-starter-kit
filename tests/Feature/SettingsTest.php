@@ -99,6 +99,27 @@ it('removes a member but not yourself', function (): void {
         ->assertStatus(422);
 });
 
+it('shows the plain text token exactly once after creation', function (): void {
+    $this->actingAs($this->user)
+        ->post('/settings/api/tokens', ['name' => 'cli', 'abilities' => ['read']])
+        ->assertRedirect();
+
+    // The flash prop carries the plain token on the very next visit…
+    $this->actingAs($this->user)
+        ->get('/settings/api')
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('flash.token.name', 'cli')
+            ->whereNot('flash.token.plainTextToken', null)
+        );
+
+    // …and is gone after that (flash semantics).
+    $this->actingAs($this->user)
+        ->get('/settings/api')
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('flash.token', null)
+        );
+});
+
 it('lists creates and revokes api tokens', function (): void {
     $this->actingAs($this->user)
         ->post('/settings/api/tokens', [

@@ -30,12 +30,7 @@ const form = reactive({
     abilities: ['read'] as string[],
 });
 
-const newToken = computed(
-    () =>
-        page.props.flash?.token as
-            | { name: string; plainTextToken: string }
-            | undefined,
-);
+const newToken = computed(() => page.props.flash.token);
 
 function createToken() {
     router.post(

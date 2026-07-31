@@ -1,10 +1,5 @@
 import '../css/app.css';
 import './echo';
-
-if (localStorage.getItem('vueuse-color-scheme') === null) {
-    localStorage.setItem('vueuse-color-scheme', 'dark');
-}
-
 import { createInertiaApp } from '@inertiajs/vue3';
 import UApp from '@nuxt/ui/components/App.vue';
 import ui from '@nuxt/ui/vue-plugin';
@@ -12,7 +7,7 @@ import { createHead } from '@unhead/vue/client';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h, type DefineComponent } from 'vue';
 
-const appName = import.meta.env.VITE_APP_NAME || 'GBA';
+const appName = import.meta.env.VITE_APP_NAME || 'WizardInCode';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
@@ -31,6 +26,6 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#10b981',
+        color: 'var(--ui-primary)',
     },
 });

@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
+@import '@fontsource-variable/public-sans';
+
+@plugin '@tailwindcss/typography';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -9,7 +12,7 @@
 @source '../**/*.vue';
 
 @theme static {
-    --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Public Sans Variable', ui-sans-serif, system-ui, sans-serif;
 
     --color-green-50: oklch(90.98% 0.04338 166.72);
     --color-green-100: oklch(88.46% 0.05417 166.29);
@@ -21,6 +24,9 @@
     --color-green-700: oklch(45.657% 0.08188 161.06);
     --color-green-800: oklch(32.298% 0.05338 161.83);
     --color-green-900: oklch(17.276% 0.02184 161.78);
+
+    /* Layout tokens shared by every backoffice page. */
+    --container-page: 72rem;
 }
 
 .dark {
@@ -28,5 +34,29 @@
 }
 
 html {
+    color-scheme: light;
+}
+
+html.dark {
     color-scheme: dark;
+}
+
+/*
+ * Site preview canvas (visual editor + block previews).
+ * Blocks consume only these variables so the same SFCs render
+ * identically inside the dark backoffice and the public renderer.
+ */
+.site-preview {
+    --site-bg: #ffffff;
+    --site-fg: #111827;
+    --site-muted: #6b7280;
+    --site-accent: #059669;
+    --site-accent-fg: #ffffff;
+    --site-radius: 0.5rem;
+    --site-font: var(--font-sans);
+
+    color-scheme: light;
+    background-color: var(--site-bg);
+    color: var(--site-fg);
+    font-family: var(--site-font);
 }
