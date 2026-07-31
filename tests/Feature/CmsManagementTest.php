@@ -13,6 +13,7 @@ beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
     $this->user = User::factory()->create(['current_tenant_id' => $this->tenant->id]);
     $this->tenant->users()->attach($this->user);
+    grantRole($this->tenant, $this->user);
     $this->site = Site::factory()->for($this->tenant)->create();
 });
 

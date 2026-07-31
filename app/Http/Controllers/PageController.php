@@ -11,6 +11,7 @@ use App\Models\Page;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -65,6 +66,8 @@ final class PageController
     public function destroy(Site $site, Page $page): RedirectResponse
     {
         abort_unless($page->site_id === $site->id, 404);
+
+        Gate::authorize('delete', $page);
 
         $page->delete();
 

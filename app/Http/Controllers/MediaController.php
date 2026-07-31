@@ -8,6 +8,7 @@ use App\Models\MediaAsset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -34,6 +35,8 @@ final class MediaController
 
     public function store(Request $request): RedirectResponse
     {
+        Gate::authorize('create', MediaAsset::class);
+
         /** @var array{file: UploadedFile, alt?: string|null} $validated */
         $validated = $request->validate([
             'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,gif,svg,pdf', 'max:10240'],
@@ -62,6 +65,8 @@ final class MediaController
 
     public function update(Request $request, MediaAsset $media): RedirectResponse
     {
+        Gate::authorize('update', $media);
+
         /** @var array{alt?: string|null} $validated */
         $validated = $request->validate([
             'alt' => ['nullable', 'string', 'max:255'],
@@ -74,6 +79,8 @@ final class MediaController
 
     public function destroy(MediaAsset $media): RedirectResponse
     {
+        Gate::authorize('delete', $media);
+
         Storage::disk($media->disk)->delete($media->path);
         $media->delete();
 

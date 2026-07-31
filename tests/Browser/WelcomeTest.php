@@ -9,6 +9,7 @@ it('renders the dashboard shell', function (): void {
     $tenant = Tenant::factory()->create();
     $user = User::factory()->create(['current_tenant_id' => $tenant->id]);
     $tenant->users()->attach($user);
+    grantRole($tenant, $user);
 
     $this->actingAs($user);
 

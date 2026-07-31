@@ -15,7 +15,7 @@ Route::prefix('v1/sites/{site:slug}')->name('api.v1.sites.')->group(function ():
     Route::get('/sitemap.xml', SiteSitemapController::class)->name('sitemap');
 });
 
-Route::prefix('v1')->name('api.v1.')->middleware(['auth:sanctum', 'site.tenant'])->group(function (): void {
+Route::prefix('v1')->name('api.v1.')->middleware(['auth:sanctum', 'abilities:read', 'site.tenant'])->group(function (): void {
     Route::get('/sites', SitesController::class)->name('sites.index');
     Route::get('/sites/{site:slug}/schema', SiteSchemaController::class)->name('sites.schema');
     Route::get('/sites/{site:slug}/pages/{slug}', SitePageController::class)

@@ -9,6 +9,7 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Models\Post;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -73,6 +74,8 @@ final class PostController
     public function destroy(Site $site, Post $post): RedirectResponse
     {
         abort_unless($post->site_id === $site->id, 404);
+
+        Gate::authorize('delete', $post);
 
         $post->delete();
 

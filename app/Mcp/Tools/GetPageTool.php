@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Mcp\Concerns\EnforcesAbilities;
 use App\Models\PageBlock;
 use App\Models\Site;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -15,11 +16,17 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Get a page of a site with its blocks.')]
 final class GetPageTool extends Tool
 {
+    use EnforcesAbilities;
+
     /**
      * Handle the tool request.
      */
     public function handle(Request $request): Response
     {
+        if (($denied = $this->deniedFor($request, 'read', 'sites.view')) instanceof Response) {
+            return $denied;
+        }
+
         /** @var array{site_slug: string, page_slug: string} $data */
         $data = $request->validate([
             'site_slug' => ['required', 'string'],

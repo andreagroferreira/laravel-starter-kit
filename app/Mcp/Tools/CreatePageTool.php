@@ -6,6 +6,7 @@ namespace App\Mcp\Tools;
 
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
+use App\Mcp\Concerns\EnforcesAbilities;
 use App\Models\Site;
 use App\Models\User;
 use App\Services\AuditLogger;
@@ -19,11 +20,17 @@ use Laravel\Mcp\Server\Tool;
 #[Description('Create a new draft page in a site (draft-first: never publishes). Requires the write:draft token ability.')]
 final class CreatePageTool extends Tool
 {
+    use EnforcesAbilities;
+
     /**
      * Handle the tool request.
      */
     public function handle(Request $request): Response
     {
+        if (($denied = $this->deniedFor($request, 'write:draft', 'pages.manage')) instanceof Response) {
+            return $denied;
+        }
+
         /** @var array{site_slug: string, title: string, slug: string, blocks?: list<array{type: string, content?: array<string, mixed>}>} $data */
         $data = $request->validate([
             'site_slug' => ['required', 'string'],

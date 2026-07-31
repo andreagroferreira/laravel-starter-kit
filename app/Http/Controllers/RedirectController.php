@@ -8,6 +8,7 @@ use App\Models\Redirect;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse as HttpRedirect;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,6 +24,8 @@ final class RedirectController
 
     public function store(Request $request, Site $site): HttpRedirect
     {
+        Gate::authorize('create', Redirect::class);
+
         /** @var array{from_path: string, to_path: string, status_code: string} $validated */
         $validated = $request->validate([
             'from_path' => ['required', 'string', 'starts_with:/', 'max:500'],
@@ -37,6 +40,8 @@ final class RedirectController
 
     public function destroy(Site $site, Redirect $redirect): HttpRedirect
     {
+        Gate::authorize('delete', $redirect);
+
         abort_unless($redirect->site_id === $site->id, 404);
 
         $redirect->delete();

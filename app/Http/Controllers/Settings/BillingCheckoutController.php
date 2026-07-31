@@ -8,6 +8,7 @@ use App\Contracts\BillingManager;
 use App\Models\Tenant;
 use App\Support\CurrentTenant;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 final class BillingCheckoutController
 {
@@ -15,6 +16,8 @@ final class BillingCheckoutController
     {
         /** @var Tenant $tenant */
         $tenant = resolve(CurrentTenant::class)->getOrFail();
+
+        Gate::authorize('manageBilling', $tenant);
 
         return $billing->checkout($tenant, $plan)->redirect();
     }

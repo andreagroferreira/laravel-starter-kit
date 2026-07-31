@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Page;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class StorePageRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        return $this->user()?->can('create', Page::class) ?? false;
     }
 
     /**

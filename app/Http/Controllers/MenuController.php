@@ -8,6 +8,7 @@ use App\Models\Menu;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,6 +24,8 @@ final class MenuController
 
     public function store(Request $request, Site $site): RedirectResponse
     {
+        Gate::authorize('create', Menu::class);
+
         $request->validate([
             'name' => ['required', 'string', 'alpha_dash', 'max:60'],
         ]);
@@ -34,6 +37,8 @@ final class MenuController
 
     public function update(Request $request, Site $site, Menu $menu): RedirectResponse
     {
+        Gate::authorize('update', $menu);
+
         abort_unless($menu->site_id === $site->id, 404);
 
         /** @var array{items: list<array{label: string, url: string}>} $validated */
@@ -50,6 +55,8 @@ final class MenuController
 
     public function destroy(Site $site, Menu $menu): RedirectResponse
     {
+        Gate::authorize('delete', $menu);
+
         abort_unless($menu->site_id === $site->id, 404);
 
         $menu->delete();

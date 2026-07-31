@@ -15,6 +15,7 @@ beforeEach(function (): void {
 
     $this->user = User::factory()->create(['current_tenant_id' => $tenant->id]);
     $tenant->users()->attach($this->user);
+    grantRole($this->tenant, $this->user);
 });
 
 it('requires authentication for billing routes', function (): void {

@@ -7,13 +7,13 @@ namespace App\Actions\Fortify;
 use App\Enums\TenantRole;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\TenantProvisioner;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
-use Spatie\Permission\Models\Role;
 
 final class CreateNewUser implements CreatesNewUsers
 {
@@ -54,11 +54,9 @@ final class CreateNewUser implements CreatesNewUsers
 
             $tenant->users()->attach($user, ['joined_at' => now()]);
 
-            setPermissionsTeamId($tenant);
+            resolve(TenantProvisioner::class)->provision($tenant);
 
-            foreach (TenantRole::cases() as $role) {
-                Role::findOrCreate($role);
-            }
+            setPermissionsTeamId($tenant);
 
             $user->assignRole(TenantRole::Owner);
 

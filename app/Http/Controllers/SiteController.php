@@ -8,6 +8,7 @@ use App\Http\Requests\StoreSiteRequest;
 use App\Models\Site;
 use App\Services\SiteService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -55,6 +56,7 @@ final readonly class SiteController
 
     public function destroy(Site $site): RedirectResponse
     {
+        Gate::authorize('delete', $site);
 
         $site->delete();
 

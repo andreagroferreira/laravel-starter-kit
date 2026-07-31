@@ -13,13 +13,17 @@ use App\Models\Site;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Support\CurrentTenant;
+use Laravel\Sanctum\TransientToken;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
     $this->user = User::factory()->create(['current_tenant_id' => $this->tenant->id]);
     $this->tenant->users()->attach($this->user);
+    grantRole($this->tenant, $this->user);
 
     // What SetCurrentTenant does on the HTTP route.
+    // What auth:sanctum grants first-party sessions on the HTTP route.
+    $this->user->withAccessToken(new TransientToken);
     resolve(CurrentTenant::class)->set($this->tenant);
 });
 

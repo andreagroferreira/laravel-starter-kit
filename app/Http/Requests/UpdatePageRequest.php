@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Enums\BlockType;
+use App\Models\Page;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -12,7 +13,9 @@ final class UpdatePageRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $page = $this->route('page');
+
+        return $page instanceof Page && ($this->user()?->can('update', $page) ?? false);
     }
 
     /**

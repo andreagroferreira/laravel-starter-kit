@@ -9,8 +9,8 @@ use App\Enums\SiteType;
 use App\Enums\TenantRole;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\TenantProvisioner;
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
 
 final class DatabaseSeeder extends Seeder
 {
@@ -33,10 +33,8 @@ final class DatabaseSeeder extends Seeder
 
         $tenant->users()->syncWithoutDetaching([$user->id => ['joined_at' => now()]]);
 
+        resolve(TenantProvisioner::class)->provision($tenant);
         setPermissionsTeamId($tenant->id);
-        foreach (TenantRole::cases() as $role) {
-            Role::findOrCreate($role);
-        }
 
         $user->assignRole(TenantRole::Owner);
 

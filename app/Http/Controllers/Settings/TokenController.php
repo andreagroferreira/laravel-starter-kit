@@ -8,6 +8,7 @@ use App\Models\Tenant;
 use App\Support\CurrentTenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,6 +27,8 @@ final class TokenController
     {
         /** @var Tenant $tenant */
         $tenant = resolve(CurrentTenant::class)->getOrFail();
+
+        Gate::authorize('manageTokens', $tenant);
 
         $user = request()->user();
 
@@ -48,6 +51,8 @@ final class TokenController
 
     public function store(Request $request): RedirectResponse
     {
+        Gate::authorize('manageTokens', resolve(CurrentTenant::class)->getOrFail());
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'abilities' => ['required', 'array', 'min:1'],
@@ -67,6 +72,8 @@ final class TokenController
 
     public function destroy(Request $request, string $tokenId): RedirectResponse
     {
+        Gate::authorize('manageTokens', resolve(CurrentTenant::class)->getOrFail());
+
         $request->user()?->tokens()->where('id', $tokenId)->delete();
 
         return back();

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Settings;
 
 use App\Models\AuditLog;
+use App\Support\CurrentTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,6 +16,8 @@ final class AuditLogController
 {
     public function __invoke(Request $request): Response
     {
+        Gate::authorize('viewAudit', resolve(CurrentTenant::class)->getOrFail());
+
         $actorType = $request->query('actor');
 
         $logs = AuditLog::query()

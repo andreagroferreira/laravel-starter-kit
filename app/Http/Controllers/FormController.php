@@ -8,6 +8,7 @@ use App\Models\Form;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,6 +24,8 @@ final class FormController
 
     public function store(Request $request, Site $site): RedirectResponse
     {
+        Gate::authorize('create', Form::class);
+
         /** @var array{name: string, fields: list<array{name: string, type: string, required?: bool}>} $validated */
         $validated = $request->validate([
             'name' => ['required', 'string', 'alpha_dash', 'max:60'],
@@ -39,6 +42,8 @@ final class FormController
 
     public function destroy(Site $site, Form $form): RedirectResponse
     {
+        Gate::authorize('delete', $form);
+
         abort_unless($form->site_id === $site->id, 404);
 
         $form->delete();

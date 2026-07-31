@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Post;
 use Illuminate\Foundation\Http\FormRequest;
 
 final class UpdatePostRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null;
+        $post = $this->route('post');
+
+        return $post instanceof Post && ($this->user()?->can('update', $post) ?? false);
     }
 
     /**

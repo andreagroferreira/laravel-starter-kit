@@ -8,12 +8,15 @@ use App\Enums\ContentStatus;
 use App\Models\Page;
 use App\Models\Site;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 final class PublishPageController
 {
     public function __invoke(Site $site, Page $page): RedirectResponse
     {
         abort_unless($page->site_id === $site->id, 404);
+
+        Gate::authorize('publish', $page);
 
         $page->update([
             'status' => $page->status === ContentStatus::Published ? ContentStatus::Draft : ContentStatus::Published,

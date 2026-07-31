@@ -11,6 +11,7 @@ it('creates a tenant with members', function (): void {
     $user = User::factory()->create();
 
     $tenant->users()->attach($user);
+    grantRole($tenant, $user);
 
     expect($tenant->users)->toHaveCount(1)
         ->and($user->tenants)->toHaveCount(1);

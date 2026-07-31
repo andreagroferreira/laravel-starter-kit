@@ -16,6 +16,7 @@ beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['ai_credits_monthly' => 10]);
     $this->user = User::factory()->create(['current_tenant_id' => $this->tenant->id]);
     $this->tenant->users()->attach($this->user);
+    grantRole($this->tenant, $this->user);
     $this->site = Site::factory()->for($this->tenant)->create();
 });
 

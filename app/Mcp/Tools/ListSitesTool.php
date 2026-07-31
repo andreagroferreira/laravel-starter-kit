@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools;
 
+use App\Mcp\Concerns\EnforcesAbilities;
 use App\Models\Site;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -14,11 +15,17 @@ use Laravel\Mcp\Server\Tool;
 #[Description('List all sites of the current tenant with their status.')]
 final class ListSitesTool extends Tool
 {
+    use EnforcesAbilities;
+
     /**
      * Handle the tool request.
      */
     public function handle(Request $request): Response
     {
+        if (($denied = $this->deniedFor($request, 'read', 'sites.view')) instanceof Response) {
+            return $denied;
+        }
+
         $sites = Site::query()->latest()->limit(50)->get()
             ->map(fn (Site $site): array => [
                 'id' => $site->id,
