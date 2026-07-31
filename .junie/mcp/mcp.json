@@ -3,7 +3,7 @@
         "laravel-boost": {
             "command": "/Users/andreagroferreira/Library/Application Support/Herd/bin/php84",
             "args": [
-                "/Users/andreagroferreira/Herd/gba-web-v2/artisan",
+                "/Users/andreagroferreira/Herd/cms-wiz-kimi-test/artisan",
                 "boost:mcp"
             ]
         }

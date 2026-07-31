@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 # ============================================================================
 # ArkaOS — CwdChanged Hook
-# Fires when the working directory changes. Detects ecosystem and injects
-# project context so Claude knows which squad and stack to use.
+# Fires when the working directory changes. Detects the ecosystem/stack
+# and surfaces a systemMessage naming them (the one deliverable surface
+# on this event — CwdChanged's hookSpecificOutput accepts watchPaths
+# only).
 # ============================================================================
 
 input=$(cat)
 NEW_CWD=$(echo "$input" | jq -r '.cwd // ""' 2>/dev/null)
+
+# ─── Shared Python resolver (exports ARKA_PY) ──────────────────────────
+_ARKA_LIB="$(dirname "${BASH_SOURCE[0]:-$0}")/_lib/arka_python.sh"
+if [ -f "$_ARKA_LIB" ]; then . "$_ARKA_LIB"; else ARKA_PY="python3"; fi
 
 if [ -z "$NEW_CWD" ] || [ ! -d "$NEW_CWD" ]; then
   exit 0
@@ -23,41 +29,44 @@ fi
 ECOSYSTEM=""
 ECOSYSTEM_NAME=""
 
-if [ -f "$ECOSYSTEMS_FILE" ] && command -v python3 &>/dev/null; then
-  eval "$(python3 -c "
+if [ -f "$ECOSYSTEMS_FILE" ] && command -v "$ARKA_PY" >/dev/null 2>&1; then
+  # OWASP A03: NEW_CWD is untrusted harness input. It is passed through the
+  # environment (never interpolated into the Python source), and the result
+  # is emitted as JSON read by jq — no `eval`, so a crafted cwd can neither
+  # break the source string nor inject a shell command.
+  _ECO_JSON=$(ARKA_CWD="$NEW_CWD" ARKA_ECO_FILE="$ECOSYSTEMS_FILE" "$ARKA_PY" -c '
 import json, os, sys
 
-cwd = '$NEW_CWD'
-eco_file = os.path.expanduser('$ECOSYSTEMS_FILE')
+cwd = os.environ["ARKA_CWD"]
+eco_file = os.path.expanduser(os.environ["ARKA_ECO_FILE"])
+
+
+def emit(eco_id, name):
+    print(json.dumps({"ecosystem": eco_id, "name": name}))
+    sys.exit(0)
+
 
 try:
     data = json.load(open(eco_file))
-    ecosystems = data.get('ecosystems', {})
+    ecosystems = data.get("ecosystems", {})
 
     for eco_id, eco in ecosystems.items():
-        projects = eco.get('projects', [])
-        for proj in projects:
-            # Check if cwd contains the project name
+        for proj in eco.get("projects", []):
             if proj in cwd:
-                print(f'ECOSYSTEM=\"{eco_id}\"')
-                print(f'ECOSYSTEM_NAME=\"{eco.get(\"name\", eco_id)}\"')
-                sys.exit(0)
+                emit(eco_id, eco.get("name", eco_id))
 
-    # No match by project name, try by path patterns
-    if '/herd/' in cwd or '/Herd/' in cwd:
-        dir_name = os.path.basename(cwd.rstrip('/'))
+    if "/herd/" in cwd or "/Herd/" in cwd:
+        dir_name = os.path.basename(cwd.rstrip("/"))
         for eco_id, eco in ecosystems.items():
-            for proj in eco.get('projects', []):
-                if proj == dir_name:
-                    print(f'ECOSYSTEM=\"{eco_id}\"')
-                    print(f'ECOSYSTEM_NAME=\"{eco.get(\"name\", eco_id)}\"')
-                    sys.exit(0)
+            if dir_name in eco.get("projects", []):
+                emit(eco_id, eco.get("name", eco_id))
 except Exception:
     pass
 
-print('ECOSYSTEM=\"\"')
-print('ECOSYSTEM_NAME=\"\"')
-" 2>/dev/null)"
+print(json.dumps({"ecosystem": "", "name": ""}))
+' 2>/dev/null)
+  ECOSYSTEM=$(echo "$_ECO_JSON" | jq -r '.ecosystem // ""' 2>/dev/null)
+  ECOSYSTEM_NAME=$(echo "$_ECO_JSON" | jq -r '.name // ""' 2>/dev/null)
 fi
 
 # ─── Detect stack ──────────────────────────────────────────────────────
@@ -109,5 +118,12 @@ if [ -n "$DESCRIPTOR" ]; then
 fi
 
 if [ -n "$CONTEXT" ]; then
-  echo "{\"additionalContext\": \"${CONTEXT}\"}"
+  # CwdChanged's hookSpecificOutput accepts watchPaths ONLY (Claude Code
+  # 2.1.220 schema) — additionalContext is unreachable on this event. The
+  # top-level systemMessage key IS consumed and surfaced to the operator.
+  # On later prompts the cwd-reading Synapse layers refresh (git branch,
+  # graph context, knowledge retrieval, cwd-scoped session memory).
+  # Built with jq so any quote/backslash in the ecosystem name or
+  # descriptor path is escaped, never breaking the envelope (OWASP A03).
+  jq -nc --arg msg "$CONTEXT" '{systemMessage: $msg}'
 fi

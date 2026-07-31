@@ -1,146 +1,61 @@
 #!/usr/bin/env bash
 # ============================================================================
-# ArkaOS — SessionStart Hook
-# Uses systemMessage (same protocol as claude-mem) for guaranteed display.
+# ArkaOS — SessionStart Hook (thin wrapper, F2-2 hook-hygiene completion)
+#
+# ONE python process (core.hooks.session_start) builds the entire
+# systemMessage — the 13 inline python spawns of the previous version
+# live there now (baseline 251ms p50 before consolidation). This file
+# only resolves the interpreter and execs; with no usable interpreter
+# it emits a static banner and exits 0 (fail-open, stdlib-free).
 # ============================================================================
 
-# ─── Profile ───────────────────────────────────────────────────────────
-NAME="founder"
-COMPANY="WizardingCode"
-VERSION="2.x"
+# _HOOK_CWD captured BEFORE any cd — inside a compound command $PWD
+# would expand after the cd (QG blocker, F1-A3: cross-project leak).
+_HOOK_CWD="$PWD"
+export ARKA_HOOK_CWD="$_HOOK_CWD"
 
-if [ -f "$HOME/.arkaos/profile.json" ] && command -v python3 &>/dev/null; then
-  NAME=$(python3 -c "import json; p=json.load(open('$HOME/.arkaos/profile.json')); print(p.get('name', p.get('role', 'founder')))" 2>/dev/null || echo "founder")
-  COMPANY=$(python3 -c "import json; print(json.load(open('$HOME/.arkaos/profile.json')).get('company', 'WizardingCode'))" 2>/dev/null || echo "WizardingCode")
-fi
+# ─── Shared Python resolver (exports ARKA_PY) ──────────────────────────
+_ARKA_LIB="$(dirname "${BASH_SOURCE[0]:-$0}")/_lib/arka_python.sh"
+if [ -f "$_ARKA_LIB" ]; then . "$_ARKA_LIB"; else ARKA_PY="python3"; fi
 
-if [ -f "$HOME/.arkaos/.repo-path" ]; then
-  REPO=$(cat "$HOME/.arkaos/.repo-path")
-  [ -f "$REPO/VERSION" ] && VERSION=$(cat "$REPO/VERSION" | tr -d '[:space:]')
-fi
-
-# ─── Static greeting (cache-friendly) ──────────────────────────────────
-# Time-of-day branching removed: it invalidated prompt cache 3x/day without
-# meaningful signal. Static greeting keeps SessionStart output stable.
-GREETING="Olá"
-
-# ─── Version drift ─────────────────────────────────────────────────────
-SYNC_STATE="$HOME/.arkaos/sync-state.json"
-DRIFT=""
-
-if [ -f "$SYNC_STATE" ]; then
-  SYNCED=$(python3 -c "import json; print(json.load(open('$SYNC_STATE'))['version'])" 2>/dev/null || echo "none")
-  if [ "$SYNCED" != "$VERSION" ]; then
-    DRIFT="\\n[arka:update-available] Core v${VERSION} != synced v${SYNCED}. Run /arka update."
-  fi
-else
-  DRIFT="\\n[arka:update-available] Never synced. Run /arka update."
-fi
-
-# ─── Build message ─────────────────────────────────────────────────────
-MSG="\\n╔══════════════════════════════════════════════╗\\n"
-MSG+="║                                              ║\\n"
-MSG+="║              A R K A   O S                   ║\\n"
-MSG+="║                                              ║\\n"
-MSG+="║   The Operating System for AI Teams          ║\\n"
-MSG+="║                  by WizardingCode            ║\\n"
-MSG+="║                                              ║\\n"
-MSG+="╚══════════════════════════════════════════════╝\\n"
-MSG+="\\n"
-MSG+="${GREETING}, ${NAME} (${COMPANY})\\n"
-# ─── Active Workflow ──────────────────────────────────────────────────
-STATE_READER="$REPO/core/workflow/state_reader.sh"
-if [ -n "$REPO" ] && [ -f "$STATE_READER" ] && bash "$STATE_READER" active 2>/dev/null; then
-  WF_SUMMARY=$(bash "$STATE_READER" summary 2>/dev/null)
-  WF_NAME=$(echo "$WF_SUMMARY" | cut -d'|' -f1)
-  WF_PHASE=$(echo "$WF_SUMMARY" | cut -d'|' -f2)
-  WF_PROGRESS=$(echo "$WF_SUMMARY" | cut -d'|' -f3)
-  WF_BRANCH=$(echo "$WF_SUMMARY" | cut -d'|' -f4)
-  WF_VIOLATIONS=$(echo "$WF_SUMMARY" | cut -d'|' -f5)
-  MSG+="\\nWorkflow: ${WF_NAME} (${WF_PROGRESS})"
-  [ -n "$WF_BRANCH" ] && MSG+=" branch:${WF_BRANCH}"
-  [ "$WF_VIOLATIONS" != "0" ] && MSG+=" VIOLATIONS:${WF_VIOLATIONS}"
-  MSG+="\\n"
-fi
-
-# --- Forge Plan Display ---
-_FORGE_PLANS="$HOME/.arkaos/plans"
-_FORGE_ACTIVE="$_FORGE_PLANS/active.yaml"
-_FORGE_LINE=""
-
-if [ -f "$_FORGE_ACTIVE" ]; then
-  _FORGE_ID=$(cat "$_FORGE_ACTIVE" 2>/dev/null)
-  _FORGE_FILE="$_FORGE_PLANS/${_FORGE_ID}.yaml"
-  if [ -f "$_FORGE_FILE" ] && command -v python3 &>/dev/null; then
-    _FORGE_NAME=$(FORGE_FILE="$_FORGE_FILE" python3 -c "import yaml,os; d=yaml.safe_load(open(os.environ['FORGE_FILE'])); print(d.get('name',''))" 2>/dev/null)
-    _FORGE_STATUS=$(FORGE_FILE="$_FORGE_FILE" python3 -c "import yaml,os; d=yaml.safe_load(open(os.environ['FORGE_FILE'])); print(d.get('status',''))" 2>/dev/null)
-    _FORGE_PHASES=$(FORGE_FILE="$_FORGE_FILE" python3 -c "import yaml,os; d=yaml.safe_load(open(os.environ['FORGE_FILE'])); print(len(d.get('plan_phases',[])))" 2>/dev/null)
-    _FORGE_BRANCH=$(FORGE_FILE="$_FORGE_FILE" python3 -c "import yaml,os; d=yaml.safe_load(open(os.environ['FORGE_FILE'])); print(d.get('governance',{}).get('branch_strategy',''))" 2>/dev/null)
-
-    if [ "$_FORGE_STATUS" = "approved" ]; then
-      _FORGE_LINE="  ⚒ Forge plan pending: ${_FORGE_NAME} | Phases: ${_FORGE_PHASES} | /forge resume"
-    elif [ "$_FORGE_STATUS" = "executing" ]; then
-      _FORGE_LINE="  ⚒ Forge executing: ${_FORGE_NAME} | Phases: ${_FORGE_PHASES} | Branch: ${_FORGE_BRANCH}"
+# ─── Resolve the root via the shared resolver (one root per session) ───
+# Reading .repo-path raw diverged from every other hook: the file points
+# at an npx cache that `npm cache clean` can purge, while
+# arka_resolve_root falls through to the ~/.arkaos/lib snapshot. The
+# chosen root AND source both travel to the entrypoint so the session
+# can name the root it actually ran from ([arka:root]).
+REPO=""
+ARKA_ROOT_SOURCE="legacy"
+if command -v arka_resolve_root >/dev/null 2>&1; then
+  [ -n "${ARKAOS_ROOT:-}" ] && ARKA_ROOT_SOURCE="env"
+  REPO="$(arka_resolve_root)"
+  if [ "$ARKA_ROOT_SOURCE" != "env" ]; then
+    if [ -f "$HOME/.arkaos/.repo-path" ] \
+       && [ "$REPO" = "$(cat "$HOME/.arkaos/.repo-path" 2>/dev/null)" ]; then
+      ARKA_ROOT_SOURCE="repo-path"
+    elif [ "$REPO" = "$HOME/.arkaos/lib" ]; then
+      ARKA_ROOT_SOURCE="lib-snapshot"
+    else
+      ARKA_ROOT_SOURCE="fallback"
     fi
   fi
+elif [ -f "$HOME/.arkaos/.repo-path" ]; then
+  REPO=$(cat "$HOME/.arkaos/.repo-path")
+fi
+export ARKA_ROOT_SOURCE
+export ARKA_ROOT="$REPO"
+
+# The MODULE file is the guard, not just core/: an older installed
+# snapshot without it would exec into "No module named ..." (exit 1,
+# empty output — a broken SessionStart instead of a degraded banner).
+if [ -n "$REPO" ] && [ -f "$REPO/core/hooks/session_start.py" ] \
+   && command -v "$ARKA_PY" >/dev/null 2>&1; then
+  cd "$REPO" 2>/dev/null || true
+  PYTHONPATH="$REPO" exec "$ARKA_PY" -m core.hooks.session_start
 fi
 
-MSG+="ArkaOS v${VERSION} | 65 agents | 17 departments | 244+ skills"
-[ -n "$_FORGE_LINE" ] && MSG+="\\n${_FORGE_LINE}"
-MSG+="${DRIFT}"
-
-# ─── Mandatory Flow Contract (top-of-session, highest priority) ─────────
-MSG+="\\n\\n[ARKA:MANDATORY-FLOW] NON-NEGOTIABLE. Every non-trivial request runs the 13-phase canonical flow (constitution rule mandatory-flow; source arka/skills/flow/SKILL.md):"
-MSG+="\\n  1.Input  2.Get-context  3.Route ([arka:routing] <dept> -> <lead>)  4.Call-hierarchy"
-MSG+="\\n  5.Research (Obsidian+vector DB, cite or declare gap)  6.Call-team (Agent tool)"
-MSG+="\\n  7.Plan with 6 parallel reviewers (positive / devils-advocate / Q&A / KB-research / best-solution / pessimistic)"
-MSG+="\\n  8.Present+save (Obsidian + vector DB + ~/.arkaos/plans/)  9.Wait-approval (silence != approval)"
-MSG+="\\n 10.TODO list  11.Per-todo: team-call -> complete -> QA -> Security -> Quality Gate (Marta+Eduardo+Francisca Opus) -> Document"
-MSG+="\\n 12.Loop until TODO exhausted  13.Detailed summary"
-MSG+="\\nEmit [arka:phase:N] before each step. Bypass ONLY via [arka:trivial] <reason> for single-file edits under 10 lines."
-MSG+="\\nNo runtime setting, no user convenience, no task type can opt out. This contract overrides generic-assistant defaults."
-
-# ─── Transparency tag contract (PR12 v2.34.0) ───────────────────────────
-MSG+="\\n\\n[ARKA:META-TAG] Every substantive response ends with a single line:"
-MSG+="\\n  [arka:meta] kb=N research=X persona=Y gap=Z critic=W"
-MSG+="\\nFields: kb=N (Obsidian/KB notes consulted), research=X (MCPs invoked: perplexity,exa,context7,firecrawl,xmcp or 'none'), persona=Y (advisor name or 'orchestrator'), gap=Z (KB gap topic or 'none'), critic=W (passed|failed|skipped)."
-MSG+="\\nMandatory after: EFFECT tool calls, plan/recommendation outputs, QG verdicts. Optional for pure read-only status replies."
-MSG+="\\nAbsence is measured by the Stop hook (warn-only in v2.34.0) before promotion to hard enforcement."
-
-# ─── Stale-aware reorganizer trigger (PR24 v2.46.0) ─────────────────────
-# If today's proposal file is missing, fire the reorganizer in the
-# background with a 30s timeout. Best-effort, never blocks session
-# start. Multiple sessions per day no-op because the file now exists.
-if [ -n "$REPO" ] && command -v python3 &>/dev/null; then
-  _PROPOSAL_DIR="$HOME/.arkaos/reorganize-proposals"
-  _TODAY="$(date -u +%Y-%m-%d).md"
-  if [ ! -f "$_PROPOSAL_DIR/$_TODAY" ]; then
-    (
-      cd "$REPO" && timeout 30s python3 -m core.cognition.reorganizer_cli >/dev/null 2>&1
-    ) &
-    disown 2>/dev/null || true
-  fi
-fi
-
-# --- Session Memory Resume Context ---
-if command -v python3 &>/dev/null && [ -n "$REPO" ]; then
-  _SESSION_CTX=$(cd "$REPO" && python3 -c "
-import sys
-sys.path.insert(0, '$REPO')
-try:
-    from core.memory.rehydrator import build_resume_context
-    ctx = build_resume_context()
-    if ctx:
-        print('\\n[SESSION] ' + ctx.replace('\\n', '\\n[SESSION] '))
-except Exception:
-    pass
-" 2>/dev/null)
-  [ -n "$_SESSION_CTX" ] && MSG+="\\n${_SESSION_CTX}"
-fi
-
-# ─── Output as systemMessage (same protocol as claude-mem) ─────────────
-python3 -c "
-import json
-msg = '''$(echo -e "$MSG")'''
-print(json.dumps({'systemMessage': msg}))
-"
+# ─── Degraded fallback: static banner, valid JSON, exit 0 ──────────────
+cat <<'EOF'
+{"systemMessage": "\n  ▲  A R K A   O S\n     The Operating System for AI Agent Teams\n\n  Olá, founder\n  degraded: no usable interpreter — run npx arkaos doctor"}
+EOF
+exit 0

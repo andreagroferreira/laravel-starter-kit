@@ -9,6 +9,15 @@
         "server.py"
       ]
     },
+    "arka-tools": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/Users/andreagroferreira/.claude/skills/arka/mcp-tools",
+        "run",
+        "server.py"
+      ]
+    },
     "obsidian": {
       "command": "npx",
       "args": [
@@ -28,16 +37,6 @@
       "args": [
         "@playwright/mcp@latest"
       ]
-    },
-    "memory-bank": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@allpepper/memory-bank-mcp"
-      ],
-      "env": {
-        "MEMORY_BANK_ROOT": "/Users/andreagroferreira/memory-bank"
-      }
     },
     "clickup": {
       "command": "npx",
@@ -86,8 +85,16 @@
         "--context",
         "ide-assistant",
         "--project",
-        "/Users/andreagroferreira/Herd/gba-web-v2"
+        "/Users/andreagroferreira/Herd/cms-wiz-kimi-test"
       ]
+    },
+    "nuxt-ui": {
+      "type": "http",
+      "url": "https://ui.nuxt.com/mcp"
+    },
+    "nuxt": {
+      "type": "http",
+      "url": "https://nuxt.com/mcp"
     },
     "supabase": {
       "type": "http",
@@ -107,9 +114,9 @@
         "PG_DATABASE": "${PG_DATABASE}"
       }
     },
-    "nuxt-ui": {
-      "type": "http",
-      "url": "https://ui.nuxt.com/mcp"
+    "codebase-memory": {
+      "command": "codebase-memory-mcp",
+      "args": []
     }
   }
 }

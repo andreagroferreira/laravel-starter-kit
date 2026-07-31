@@ -30,7 +30,7 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: ["resources/css/app.css", "resources/js/app.ts"],
+            input: ["resources/js/app.ts"],
             refresh: true,
         }),
         vue({
@@ -57,6 +57,9 @@ export default defineConfig({
     build: {
         rollupOptions: {
             external: [/@tailwindcss\/oxide/, /\.node$/],
+            output: {
+                codeSplitting: false,
+            },
         },
     },
 });

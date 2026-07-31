@@ -16,7 +16,14 @@
     "nightwatch": false,
     "sail": false,
     "skills": [
+        "ai-sdk-development",
+        "cashier-stripe-development",
+        "fortify-development",
         "laravel-best-practices",
+        "configuring-horizon",
+        "pennant-development",
+        "inertia-vue-development",
+        "echo-development",
         "tailwindcss-development"
     ]
 }

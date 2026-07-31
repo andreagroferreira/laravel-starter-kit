@@ -1,4 +1,4 @@
-<!-- arkaos:managed:start version=2.77.0 hash=5043e4f78fb9 -->
+<!-- arkaos:managed:start version=4.44.0 hash=d83f5e17524e -->
 # ArkaOS — User Instructions
 
 ## Version Drift Warning
@@ -14,14 +14,4 @@ You are operating within ArkaOS. Every request routes through the appropriate de
 ## Language
 
 Match the user's language. When writing in Portuguese, use European Portuguese (pt-PT).
-
-
-## Laravel Stack Conventions
-
-- Services + Repositories pattern; no logic in controllers.
-- Form Requests for all input validation.
-- API Resources for response shaping.
-- Feature Tests with RefreshDatabase trait.
-- Eloquent relationships over raw joins.
-- Conventional commits: `feat(scope): ...`, `fix(scope): ...`.
 <!-- arkaos:managed:end -->
