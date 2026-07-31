@@ -9,6 +9,7 @@ use App\Http\Requests\AiCopyRequest;
 use App\Models\Site;
 use App\Models\Tenant;
 use App\Services\AiCreditService;
+use App\Support\CurrentTenant;
 use Illuminate\Http\JsonResponse;
 
 final class AiCopyController
@@ -16,7 +17,7 @@ final class AiCopyController
     public function __invoke(AiCopyRequest $request, Site $site, AiCreditService $credits): JsonResponse
     {
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
 
         /** @var array{block_type: string, briefing: string, current_content?: string} $validated */
         $validated = $request->validated();

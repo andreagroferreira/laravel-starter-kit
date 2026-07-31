@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\Site;
-use App\Models\Tenant;
+use App\Support\CurrentTenant;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +20,9 @@ final class EnsureSiteTenant
         $site = $request->route('site');
 
         if ($site instanceof Site) {
-            abort_unless(app()->bound(Tenant::class) && $site->tenant_id === resolve(Tenant::class)->id, 404);
+            $current = resolve(CurrentTenant::class);
+
+            abort_unless($current->has() && $site->tenant_id === $current->id(), 404);
         }
 
         return $next($request);

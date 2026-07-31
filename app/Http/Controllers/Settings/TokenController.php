@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Settings;
 
 use App\Models\Tenant;
+use App\Support\CurrentTenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -24,7 +25,7 @@ final class TokenController
     public function show(): Response
     {
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
 
         $user = request()->user();
 

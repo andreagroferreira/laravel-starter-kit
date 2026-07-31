@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Settings;
 use App\Enums\TenantRole;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\CurrentTenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,7 +25,7 @@ final class InviteMemberController
         ]);
 
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
 
         $user = User::query()->where('email', $validated['email'])->first();
 

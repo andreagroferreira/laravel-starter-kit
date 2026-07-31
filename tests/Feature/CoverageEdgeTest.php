@@ -11,12 +11,13 @@ use App\Models\BrandProfile;
 use App\Models\Site;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\CurrentTenant;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
     $this->user = User::factory()->create(['current_tenant_id' => $this->tenant->id]);
     $this->tenant->users()->attach($this->user);
-    app()->instance(Tenant::class, $this->tenant);
+    resolve(CurrentTenant::class)->set($this->tenant);
 });
 
 it('covers the copy controller current_content branch', function (): void {

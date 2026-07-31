@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Settings;
 
 use App\Models\Tenant;
+use App\Support\CurrentTenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ final class BrandProfileController
     public function show(): Response
     {
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
 
         $profile = $tenant->brandProfile;
 
@@ -42,7 +43,7 @@ final class BrandProfileController
         ]);
 
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
 
         $tenant->brandProfile()->updateOrCreate(
             ['tenant_id' => $tenant->id],

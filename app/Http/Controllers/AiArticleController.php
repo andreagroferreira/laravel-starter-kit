@@ -10,6 +10,7 @@ use App\Http\Requests\AiArticleRequest;
 use App\Models\Site;
 use App\Models\Tenant;
 use App\Services\AiCreditService;
+use App\Support\CurrentTenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Str;
 use Laravel\Ai\Responses\StructuredAgentResponse;
@@ -19,7 +20,7 @@ final class AiArticleController
     public function __invoke(AiArticleRequest $request, Site $site, AiCreditService $credits): JsonResponse
     {
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
 
         /** @var array{briefing: string, language?: string} $validated */
         $validated = $request->validated();

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Listeners\FlushTenantState;
 use Laravel\Octane\Contracts\OperationTerminated;
 use Laravel\Octane\Events\RequestHandled;
 use Laravel\Octane\Events\RequestReceived;
@@ -72,7 +73,7 @@ return [
         RequestReceived::class => [
             ...Octane::prepareApplicationForNextOperation(),
             ...Octane::prepareApplicationForNextRequest(),
-            //
+            FlushTenantState::class,
         ],
 
         RequestHandled::class => [
@@ -85,7 +86,7 @@ return [
 
         TaskReceived::class => [
             ...Octane::prepareApplicationForNextOperation(),
-            //
+            FlushTenantState::class,
         ],
 
         TaskTerminated::class => [

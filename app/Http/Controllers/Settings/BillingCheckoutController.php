@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Contracts\BillingManager;
 use App\Models\Tenant;
+use App\Support\CurrentTenant;
 use Illuminate\Http\RedirectResponse;
 
 final class BillingCheckoutController
@@ -13,7 +14,7 @@ final class BillingCheckoutController
     public function __invoke(BillingManager $billing, string $plan): RedirectResponse
     {
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
 
         return $billing->checkout($tenant, $plan)->redirect();
     }

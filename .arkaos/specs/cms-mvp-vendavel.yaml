@@ -1,0 +1,189 @@
+id: cms-mvp-vendavel
+title: WizardInCode CMS — fecho do MVP vendável (plano aprovado 2026-07-31)
+status: in_progress
+metadata:
+  project: cms-wiz-kimi-test
+  department: dev
+  created_by: Paulo (Tech Lead) / Claude Fable 5
+  created_at: '2026-07-31T14:00:00'
+  updated_at: '2026-07-31T14:00:00'
+  approved_by: André Agro Ferreira (ExitPlanMode approval)
+  approved_at: '2026-07-31T14:00:00'
+  tags: [cms, multi-tenant, inertia, nuxt-ui, mcp, ai]
+  obsidian_path: ''
+sections:
+  - id: etapa-0
+    title: Baseline — commits, laravel/mcp require, CI postgres, .env.example, redis
+    status: implemented
+    content: >-
+      Commit do código de produto e tooling; laravel/mcp movido para require;
+      CI com PHP 8.4 + postgres:17 + cache bun.lock; .env.example completo
+      (Stripe, AI, Reverb, R2, Octane, Horizon); drivers locais redis;
+      Horizon queues default+ai+broadcasts.
+    acceptance_criteria:
+      - id: ac-0-1
+        description: composer test verde (127 testes, 100% coverage/type-coverage, phpstan max)
+        status: passed
+        verified_by: composer test local
+      - id: ac-0-2
+        description: CI corre com serviço Postgres e conclui verde
+        status: pending
+  - id: etapa-1
+    title: Octane-safety — CurrentTenant scoped + TenantAware job middleware
+    status: pending
+    content: >-
+      app/Support/CurrentTenant registado como scoped substitui
+      app()->instance(Tenant::class); BelongsToTenant, middlewares, controllers
+      e MCP tools migrados; FlushTenantState em octane.php; TenantAware para
+      jobs; testes de leak com forgetScopedInstances.
+    acceptance_criteria:
+      - id: ac-1-1
+        description: Zero app()->instance(Tenant::class) no código de produção
+        status: pending
+      - id: ac-1-2
+        description: Teste prova que o tenant não vaza entre lifecycles
+        status: pending
+  - id: etapa-2
+    title: RBAC real — RoleMatrix, policies, token abilities
+    status: pending
+    content: >-
+      Matriz permission×role (owner/editor/marketeer/journalist/editor_in_chief),
+      TenantProvisioner, 9 policies, authorize() reais, middleware abilities
+      nos grupos API/MCP, EnforcesAbilities nas tools, RbacTest datasets.
+    acceptance_criteria:
+      - id: ac-2-1
+        description: Membro não-owner não consegue apagar sites, convidar owners nem emitir tokens admin
+        status: pending
+      - id: ac-2-2
+        description: Token read não executa tools de escrita MCP
+        status: pending
+  - id: etapa-3
+    title: Fundação frontend — tokens, dark toggle sem FOUC, flash, tipos, composables
+    status: pending
+    content: >-
+      Design tokens Tailwind 4 + fonte self-hosted + typography plugin;
+      dark-first com toggle e sem FOUC; flash partilhado no Inertia (token API
+      visível); tipos do domínio + PageProps; useConfirm/useFlashToasts/
+      useTableQuery/useStatusColor; limpeza de código morto e deps fantasma.
+    acceptance_criteria:
+      - id: ac-3-1
+        description: Token API criado aparece uma vez com aviso de cópia
+        status: pending
+      - id: ac-3-2
+        description: Sem FOUC em hard refresh nos dois temas; toggle persiste
+        status: pending
+  - id: etapa-4
+    title: Filas + AI assíncrona + scheduler + billing fechado
+    status: pending
+    content: >-
+      ai_generations + jobs Horizon (queue ai) + eventos broadcast tenant.{id};
+      controllers 202 + polling fallback; AiCreditService atómico com créditos
+      por tokens reais; scheduler (posts agendados, overage, snapshot, prune);
+      webhook Stripe via WebhookHandled listener; checkout validado (404).
+    acceptance_criteria:
+      - id: ac-4-1
+        description: Geração AI não bloqueia o request; progresso via Reverb com fallback polling
+        status: pending
+      - id: ac-4-2
+        description: Post agendado transita para published pelo scheduler
+        status: pending
+      - id: ac-4-3
+        description: Plano do tenant sincroniza após webhook de subscrição
+        status: pending
+  - id: etapa-5
+    title: Padrões UI transversais + reparação página a página
+    status: pending
+    content: >-
+      ConfirmModal/PaginationBar/skeletons/PageHeader/SearchInput; useForm com
+      :error em todos os forms; pesquisa/paginação server-side; fix N+1 e
+      stats; FormRequests em falta; PageBlockSynchronizer; soft deletes com
+      índices parciais; navigation.ts única; Settings Profile/Security reais
+      via Fortify; Notifications removida; aria + responsive + PT-PT.
+    acceptance_criteria:
+      - id: ac-5-1
+        description: 422 mostra erros inline em todos os formulários
+        status: pending
+      - id: ac-5-2
+        description: Todas as ações destrutivas pedem confirmação
+        status: pending
+      - id: ac-5-3
+        description: Listas paginadas navegáveis além da página 1
+        status: pending
+  - id: etapa-6
+    title: Leads + rotas públicas por resolve
+    status: pending
+    content: >-
+      form_submissions; endpoint público com honeypot + rate limit;
+      ResolveSiteController por host; feed/sitemap sem ambiguidade de slug;
+      LeadController com export CSV; LeadReceived + LeadCaptured broadcast.
+    acceptance_criteria:
+      - id: ac-6-1
+        description: Submissão pública cria lead scoped ao tenant certo; spam marcado
+        status: pending
+      - id: ac-6-2
+        description: Dois tenants com o mesmo slug de site não colidem nas rotas públicas
+        status: pending
+  - id: etapa-7
+    title: Editor visual completo + packages/blocks
+    status: pending
+    content: >-
+      packages/blocks como fonte única (Zod contracts, registry, 9 SFCs puros,
+      tokens.ts, manifest com teste de paridade); editor click-to-edit inline
+      (store, autosave, canvas com devices, shell, palette, inspector, fields,
+      InlineText/InlineRichText); MediaPickerModal + /media/picker; Pages/Edit
+      reescrito.
+    acceptance_criteria:
+      - id: ac-7-1
+        description: Editar heading inline no preview, autosave persiste após reload
+        status: pending
+      - id: ac-7-2
+        description: Blocos image/hero escolhem media da biblioteca; bloco form seleciona forms reais
+        status: pending
+      - id: ac-7-3
+        description: Undo/redo e reordenação sem corrupção de estado
+        status: pending
+  - id: etapa-8
+    title: MCP v1 completo + página AI Copilot
+    status: pending
+    content: >-
+      Tools posts/media/publish gated por abilities; Resources SiteSchema/
+      BrandVoice/SitesList; Prompts; Ai/Index.vue com progresso Reverb;
+      useEchoChannel/useAiGeneration; listener site.{id}.
+    acceptance_criteria:
+      - id: ac-8-1
+        description: Agente MCP com scope publish publica com audit log actor=agent
+        status: pending
+      - id: ac-8-2
+        description: Página /ai gera artigo com progresso em tempo real
+        status: pending
+  - id: etapa-9
+    title: Renderer Nuxt 4 + deploy Cloudflare
+    status: pending
+    content: >-
+      apps/renderer (catch-all, resolve por hostname, BlockRenderer de
+      @wizcms/blocks, SEO, proxies sitemap/rss, FormBlock leads, gtag);
+      cache CDN sem swr/isr do Nitro; deployments + CloudflareService +
+      purge/provision jobs + SitePublished; GitHub Action; dev local
+      {slug}.wizcms.test:3000.
+    acceptance_criteria:
+      - id: ac-9-1
+        description: Criar site → publish → visível em {slug}.wizcms.test:3000
+        status: pending
+      - id: ac-9-2
+        description: Republish reflete mudanças em ≤60s sem rebuild
+        status: pending
+  - id: etapa-10
+    title: Integrações GA4/GSC/Meta + browser tests
+    status: pending
+    content: >-
+      Socialite; integrations/metric_snapshots/social_posts; GA4 OAuth +
+      snippet + sync diário + dashboard cards; GSC verificação + sync; Meta
+      posts agendados + SocialCopyAgent; Pennant flags; 12 browser tests.
+    acceptance_criteria:
+      - id: ac-10-1
+        description: GA4 ligado injeta gtag no site publicado e mostra métricas no dashboard
+        status: pending
+      - id: ac-10-2
+        description: Post social agendado publica via scheduler com external_id
+        status: pending
+deltas: []

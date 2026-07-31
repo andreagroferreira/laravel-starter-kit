@@ -6,6 +6,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\CurrentTenant;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,7 +24,7 @@ final class SetCurrentTenant
             $tenant = $user->currentTenant ?? $user->tenants()->first();
 
             if ($tenant instanceof Tenant) {
-                app()->instance(Tenant::class, $tenant);
+                resolve(CurrentTenant::class)->set($tenant);
                 setPermissionsTeamId($tenant);
             }
         }

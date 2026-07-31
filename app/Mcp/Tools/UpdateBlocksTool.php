@@ -6,9 +6,9 @@ namespace App\Mcp\Tools;
 
 use App\Enums\BlockType;
 use App\Models\Site;
-use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Support\CurrentTenant;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
@@ -60,7 +60,7 @@ final class UpdateBlocksTool extends Tool
         $user = $request->user();
 
         AuditLogger::record(
-            resolve(Tenant::class),
+            resolve(CurrentTenant::class)->getOrFail(),
             'page.blocks_updated',
             $user instanceof User ? $user : null,
             'agent',

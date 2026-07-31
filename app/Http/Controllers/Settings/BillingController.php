@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Models\Tenant;
 use App\Services\Plans;
+use App\Support\CurrentTenant;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,7 +15,7 @@ final class BillingController
     public function show(): Response
     {
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
         $subscription = $tenant->subscription('default');
 
         return Inertia::render('Settings/Billing', [

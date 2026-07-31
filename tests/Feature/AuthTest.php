@@ -78,8 +78,16 @@ it('logs out', function (): void {
     $this->assertGuest();
 });
 
+it('blocks authenticated users that belong to no workspace', function (): void {
+    $this->actingAs(User::factory()->create())
+        ->get('/')
+        ->assertForbidden();
+});
+
 it('shares the authenticated user with inertia', function (): void {
-    $user = User::factory()->create();
+    $tenant = Tenant::factory()->create();
+    $user = User::factory()->create(['current_tenant_id' => $tenant->id]);
+    $tenant->users()->attach($user);
 
     $this->actingAs($user)
         ->get('/')

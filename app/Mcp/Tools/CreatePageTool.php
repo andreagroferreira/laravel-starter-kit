@@ -7,9 +7,9 @@ namespace App\Mcp\Tools;
 use App\Enums\BlockType;
 use App\Enums\ContentStatus;
 use App\Models\Site;
-use App\Models\Tenant;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Support\CurrentTenant;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -61,7 +61,7 @@ final class CreatePageTool extends Tool
         $user = $request->user();
 
         AuditLogger::record(
-            resolve(Tenant::class),
+            resolve(CurrentTenant::class)->getOrFail(),
             'page.created',
             $user instanceof User ? $user : null,
             'agent',

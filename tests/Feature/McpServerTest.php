@@ -12,6 +12,7 @@ use App\Models\Page;
 use App\Models\Site;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Support\CurrentTenant;
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
@@ -19,7 +20,7 @@ beforeEach(function (): void {
     $this->tenant->users()->attach($this->user);
 
     // What SetCurrentTenant does on the HTTP route.
-    app()->instance(Tenant::class, $this->tenant);
+    resolve(CurrentTenant::class)->set($this->tenant);
 });
 
 it('lists the tenant sites', function (): void {

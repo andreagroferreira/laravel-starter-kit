@@ -8,6 +8,7 @@ use App\Enums\ContentStatus;
 use App\Models\Site;
 use App\Models\Tenant;
 use App\Services\AiCreditService;
+use App\Support\CurrentTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,7 +18,7 @@ final class DashboardController
     public function index(AiCreditService $credits): Response
     {
         /** @var Tenant $tenant */
-        $tenant = resolve(Tenant::class);
+        $tenant = resolve(CurrentTenant::class)->getOrFail();
 
         $sites = Site::query()
             ->withCount([
