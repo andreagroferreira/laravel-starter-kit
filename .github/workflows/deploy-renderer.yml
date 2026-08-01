@@ -1,0 +1,45 @@
+name: deploy renderer
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/renderer/**'
+      - 'packages/blocks/**'
+      - '.github/workflows/deploy-renderer.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-renderer
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Dependencies
+        working-directory: apps/renderer
+        run: bun install
+
+      - name: Build
+        working-directory: apps/renderer
+        env:
+          NUXT_PUBLIC_API_BASE: ${{ vars.RENDERER_API_BASE }}
+        run: bun run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/renderer
+          command: pages deploy dist --project-name=wizcms-renderer

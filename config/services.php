@@ -37,4 +37,11 @@ return [
         ],
     ],
 
+    'cloudflare' => [
+        'token' => env('CLOUDFLARE_API_TOKEN', ''),
+        'account_id' => env('CLOUDFLARE_ACCOUNT_ID', ''),
+        'zone_id' => env('CLOUDFLARE_ZONE_ID', ''),
+        'pages_project' => env('CLOUDFLARE_PAGES_PROJECT', 'wizcms-renderer'),
+    ],
+
 ];

@@ -16,6 +16,8 @@ return [
     |
     */
 
+    'scheme' => env('RENDERER_SCHEME', 'https'),
+
     'public_suffix' => env('RENDERER_PUBLIC_SUFFIX', '.wizardincode.site'),
 
     'local_suffixes' => [

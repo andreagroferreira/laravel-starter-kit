@@ -2,6 +2,7 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { useConfirm } from '@/composables/useConfirm';
+import { useEchoChannel } from '@/composables/useEchoChannel';
 import { statusColor, statusLabel } from '@/composables/useStatusColor';
 import type { Page, Site, SiteVersion } from '@/types/models';
 import { formatDateTime } from '@/utils/format';
@@ -9,11 +10,46 @@ import AppLayout from '../../layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout });
 
+interface DeploymentRow {
+    id: string;
+    status: 'queued' | 'running' | 'deployed' | 'failed';
+    url: string | null;
+    error: string | null;
+    created_at: string;
+}
+
 const props = defineProps<{
     site: Pick<Site, 'id' | 'name' | 'slug' | 'type' | 'status'>;
     pages: Page[];
     versions: SiteVersion[];
+    deployments: DeploymentRow[];
+    publicUrl: string;
 }>();
+
+const DEPLOY_META: Record<
+    DeploymentRow['status'],
+    { label: string; color: 'neutral' | 'info' | 'success' | 'error' }
+> = {
+    queued: { label: 'Em fila', color: 'neutral' },
+    running: { label: 'A publicar', color: 'info' },
+    deployed: { label: 'No ar', color: 'success' },
+    failed: { label: 'Falhou', color: 'error' },
+};
+
+// O deploy corre em fila: o estado chega por Reverb no canal do site.
+useEchoChannel(`site.${props.site.id}`, {
+    DeploymentUpdated: (payload: { status: string }) => {
+        if (payload.status === 'deployed') {
+            toast.add({ title: 'Site publicado no edge', color: 'success' });
+        }
+
+        if (payload.status === 'failed') {
+            toast.add({ title: 'A publicação falhou', color: 'error' });
+        }
+
+        router.reload({ only: ['deployments', 'versions', 'site'] });
+    },
+});
 
 const confirm = useConfirm();
 const toast = useToast();
@@ -228,6 +264,47 @@ async function destroySite() {
                                     @click="destroyPage(page)"
                                 />
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-if="deployments.length" class="space-y-3">
+                    <div
+                        class="flex flex-wrap items-center justify-between gap-2"
+                    >
+                        <h2 class="text-lg font-semibold">Publicações</h2>
+                        <UButton
+                            :label="publicUrl.replace(/^https?:\/\//, '')"
+                            icon="i-lucide-external-link"
+                            size="xs"
+                            variant="ghost"
+                            :to="publicUrl"
+                            target="_blank"
+                            external
+                        />
+                    </div>
+                    <div
+                        class="divide-y divide-default rounded-lg border border-default"
+                    >
+                        <div
+                            v-for="deployment in deployments"
+                            :key="deployment.id"
+                            class="flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
+                        >
+                            <span class="text-muted">
+                                {{ formatDateTime(deployment.created_at) }}
+                                <span
+                                    v-if="deployment.error"
+                                    class="text-error"
+                                >
+                                    · {{ deployment.error }}</span
+                                >
+                            </span>
+                            <UBadge
+                                :label="DEPLOY_META[deployment.status].label"
+                                :color="DEPLOY_META[deployment.status].color"
+                                variant="subtle"
+                            />
                         </div>
                     </div>
                 </div>

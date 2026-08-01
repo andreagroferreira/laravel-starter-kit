@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\ContentStatus;
+use App\Enums\DeploymentStatus;
+use App\Jobs\DeploySite;
+use App\Models\Deployment;
+use App\Models\Form;
 use App\Models\Menu;
 use App\Models\Page;
 use App\Models\PageBlock;
@@ -60,6 +64,14 @@ final class SiteService
             'menus' => $site->menus()->get(['name', 'items'])
                 ->mapWithKeys(fn (Menu $menu): array => [$menu->name => $menu->items])
                 ->all(),
+            // The renderer needs the field definitions to draw form blocks
+            // and to post leads back to the public endpoint.
+            'forms' => $site->forms()->get(['id', 'name', 'fields'])
+                ->map(fn (Form $form): array => [
+                    'id' => $form->id,
+                    'name' => $form->name,
+                    'fields' => $form->fields,
+                ])->all(),
             'pages' => $site->pages()->published()
                 ->with('blocks')
                 ->orderBy('sort_order')
@@ -92,6 +104,17 @@ final class SiteService
             ]);
 
             $site->forceFill(['status' => 'published'])->save();
+
+            /** @var Deployment $deployment */
+            $deployment = $site->deployments()->create([
+                'tenant_id' => $site->tenant_id,
+                'site_version_id' => $version->id,
+                'type' => 'content',
+                'status' => DeploymentStatus::Queued,
+                'triggered_by' => $author?->getKey(),
+            ]);
+
+            dispatch(new DeploySite($deployment->id, $site->tenant_id))->afterCommit();
 
             return $version;
         });

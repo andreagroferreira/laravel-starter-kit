@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@source '../../app/**/*.vue';
+@source '../../../../packages/blocks/src/**/*.vue';
+
+/*
+ * Same variable contract as the editor canvas (.site-preview), so a block
+ * renders identically in the backoffice and on the public site.
+ */
+:root {
+    --site-bg: #ffffff;
+    --site-fg: #111827;
+    --site-muted: #6b7280;
+    --site-accent: #059669;
+    --site-accent-fg: #ffffff;
+    --site-radius: 0.5rem;
+    --site-font: ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+    background-color: var(--site-bg);
+    color: var(--site-fg);
+    font-family: var(--site-font);
+}

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSiteRequest;
+use App\Models\Deployment;
 use App\Models\Site;
 use App\Services\SiteService;
+use App\Support\SiteUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -51,6 +53,18 @@ final readonly class SiteController
                 ->latest('published_at')
                 ->limit(10)
                 ->get(['id', 'site_id', 'origin', 'published_at', 'created_at']),
+            'publicUrl' => SiteUrl::for($site),
+            'deployments' => $site->deployments()
+                ->latest()
+                ->limit(5)
+                ->get(['id', 'site_id', 'status', 'url', 'error', 'created_at'])
+                ->map(fn (Deployment $deployment): array => [
+                    'id' => $deployment->id,
+                    'status' => $deployment->status->value,
+                    'url' => $deployment->url,
+                    'error' => $deployment->error,
+                    'created_at' => $deployment->created_at->toIso8601String(),
+                ]),
         ]);
     }
 

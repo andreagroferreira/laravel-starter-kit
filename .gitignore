@@ -32,3 +32,10 @@ frankenphp-worker.php
 # Tooling caches / scratch
 /.serena
 /.playwright-mcp
+
+# Nuxt renderer
+/apps/renderer/.nuxt
+/apps/renderer/.output
+/apps/renderer/dist
+/apps/renderer/.wrangler
+/apps/renderer/node_modules

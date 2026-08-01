@@ -71,6 +71,14 @@ final class Site extends Model
     }
 
     /**
+     * @return HasMany<Deployment, $this>
+     */
+    public function deployments(): HasMany
+    {
+        return $this->hasMany(Deployment::class);
+    }
+
+    /**
      * @return HasMany<SiteVersion, $this>
      */
     public function versions(): HasMany
