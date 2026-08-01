@@ -18,6 +18,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Builds always run as a smoke test; the deploy step is skipped until
+    # Cloudflare credentials exist.
 
     steps:
       - name: Checkout
@@ -37,6 +39,7 @@ jobs:
         run: bun run build
 
       - name: Deploy to Cloudflare Pages
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
