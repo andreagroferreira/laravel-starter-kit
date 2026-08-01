@@ -96,7 +96,7 @@ it('serves the rss feed with live posts only', function (): void {
     Post::factory()->for($this->site)->create(['title' => 'Draft post']);
     Post::factory()->for($this->site)->scheduled()->create(['title' => 'Future post']);
 
-    $response = $this->get(sprintf('/api/v1/sites/%s/feed.rss', $this->site->slug));
+    $response = $this->get(sprintf('/api/v1/public/sites/%s/feed.rss', $this->site->id));
 
     $response->assertOk()
         ->assertHeader('Content-Type', 'application/rss+xml; charset=UTF-8');
@@ -111,7 +111,7 @@ it('serves the sitemap with published pages and live posts', function (): void {
     $this->site->pages()->create(['title' => 'Home', 'slug' => '/', 'status' => ContentStatus::Published, 'published_at' => now()]);
     Post::factory()->for($this->site)->published()->create(['slug' => 'hello']);
 
-    $response = $this->get(sprintf('/api/v1/sites/%s/sitemap.xml', $this->site->slug));
+    $response = $this->get(sprintf('/api/v1/public/sites/%s/sitemap.xml', $this->site->id));
 
     $response->assertOk();
 

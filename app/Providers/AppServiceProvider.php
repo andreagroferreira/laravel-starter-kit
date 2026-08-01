@@ -8,6 +8,9 @@ use App\Contracts\BillingManager;
 use App\Models\Tenant;
 use App\Services\BillingService;
 use App\Support\CurrentTenant;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
 
@@ -22,5 +25,10 @@ final class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Cashier::useCustomerModel(Tenant::class);
+
+        RateLimiter::for(
+            'form-submissions',
+            fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()),
+        );
     }
 }

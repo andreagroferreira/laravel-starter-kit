@@ -12,6 +12,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 
@@ -37,6 +38,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'abilities' => CheckAbilities::class,
             'ability' => CheckForAnyAbility::class,
         ]);
+
+        // The tenant must be resolved BEFORE route model binding, otherwise
+        // implicit bindings run without the tenant global scope and can
+        // resolve another tenant's records.
+        $middleware->prependToPriorityList(SubstituteBindings::class, SetCurrentTenant::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(fn (TenantNotResolved $e, Request $request) => abort(403, 'You do not belong to any workspace.'));

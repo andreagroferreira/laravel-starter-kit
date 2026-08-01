@@ -20,6 +20,11 @@ export const mainNavigation: NavigationMenuItem[] = [
         icon: 'i-lucide-image',
         to: '/media',
     },
+    {
+        label: 'Leads',
+        icon: 'i-lucide-inbox',
+        to: '/leads',
+    },
 ];
 
 export const settingsNavigation: NavigationMenuItem[] = [

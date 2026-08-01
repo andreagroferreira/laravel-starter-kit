@@ -8,6 +8,8 @@ use App\Http\Controllers\AiGenerationController;
 use App\Http\Controllers\AiSeoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FormController;
+use App\Http\Controllers\LeadController;
+use App\Http\Controllers\LeadExportController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\PageController;
@@ -39,6 +41,11 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
 
     Route::get('/ai/generations/{generation}', AiGenerationController::class)->name('ai.generations.show');
+
+    Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
+    Route::get('/leads/export', LeadExportController::class)->name('leads.export');
+    Route::put('/leads/{lead}', [LeadController::class, 'update'])->name('leads.update');
+    Route::delete('/leads/{lead}', [LeadController::class, 'destroy'])->name('leads.destroy');
 
     Route::get('/sites', [SiteController::class, 'index'])->name('sites.index');
     Route::post('/sites', [SiteController::class, 'store'])->name('sites.store');
