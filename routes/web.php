@@ -11,6 +11,7 @@ use App\Http\Controllers\FormController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadExportController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\MediaPickerController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PostController;
@@ -36,6 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/', [DashboardController::class, 'index'])->name('home');
 
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+    Route::get('/media/picker', MediaPickerController::class)->name('media.picker');
     Route::post('/media', [MediaController::class, 'store'])->name('media.store');
     Route::put('/media/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');

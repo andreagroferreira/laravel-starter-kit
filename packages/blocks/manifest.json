@@ -1,0 +1,13 @@
+{
+    "types": [
+        "hero",
+        "rich_text",
+        "image",
+        "cta",
+        "features",
+        "testimonials",
+        "pricing",
+        "faq",
+        "form"
+    ]
+}

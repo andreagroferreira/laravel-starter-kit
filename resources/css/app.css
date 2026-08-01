@@ -10,6 +10,7 @@
 @source '../**/*.js';
 @source '../**/*.ts';
 @source '../**/*.vue';
+@source '../../packages/blocks/src/**/*.vue';
 
 @theme static {
     --font-sans: 'Public Sans Variable', ui-sans-serif, system-ui, sans-serif;

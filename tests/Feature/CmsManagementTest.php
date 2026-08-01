@@ -47,7 +47,7 @@ it('renders the page editor', function (): void {
         ->assertOk()
         ->assertInertia(fn (Assert $p): Assert => $p
             ->component('Pages/Edit')
-            ->has('blockTypes')
+            ->has('forms')
         );
 });
 

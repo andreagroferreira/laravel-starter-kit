@@ -1,261 +1,357 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref } from 'vue';
+import { BlockRenderer, registry, toCssVars, type BlockType } from '@blocks';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import draggable from 'vuedraggable';
-import BlockEditor from '../../components/BlockEditor.vue';
+import { useConfirm } from '@/composables/useConfirm';
+import { statusColor, statusLabel } from '@/composables/useStatusColor';
+import BlockPalette from '@/editor/BlockPalette.vue';
+import BlockShell from '@/editor/BlockShell.vue';
+import InspectorPanel from '@/editor/InspectorPanel.vue';
+import { useAutosave } from '@/editor/useAutosave';
+import { useEditorStore, type EditorBlock } from '@/editor/useEditorStore';
+import type { Page, Site } from '@/types/models';
 import AppLayout from '../../layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout });
 
-interface Block {
-    id?: string;
-    type: string;
-    content: Record<string, unknown>;
-}
-
 const props = defineProps<{
-    site: { id: string; name: string; slug: string };
-    page: {
-        id: string;
-        title: string;
-        slug: string;
-        status: string;
-        seo: Record<string, string> | null;
+    site: Pick<Site, 'id' | 'name' | 'slug'> & {
+        settings?: Record<string, unknown> | null;
     };
+    page: Page;
     blocks: {
         id: string;
         type: string;
         content: Record<string, unknown> | null;
-        sort_order: number;
     }[];
-    blockTypes: string[];
+    forms: { id: string; name: string }[];
 }>();
 
+const confirm = useConfirm();
 const toast = useToast();
 
-const form = reactive({
+const store = useEditorStore(props.blocks);
+
+const meta = useForm({
     title: props.page.title,
     slug: props.page.slug,
     seo: {
         title: props.page.seo?.title ?? '',
         description: props.page.seo?.description ?? '',
     },
-    blocks: props.blocks.map((block) => ({
-        type: block.type,
-        content: block.content ?? {},
-    })) as Block[],
 });
 
-const saving = ref(false);
+const url = `/sites/${props.site.id}/pages/${props.page.id}`;
 
-const blockLabels: Record<string, string> = {
-    hero: 'Hero',
-    rich_text: 'Rich text',
-    image: 'Image',
-    cta: 'Call to action',
-    features: 'Features',
-    testimonials: 'Testimonials',
-    pricing: 'Pricing',
-    faq: 'FAQ',
-    form: 'Form',
-};
+const autosave = useAutosave({
+    url,
+    dirty: store.dirty,
+    payload: () => ({
+        title: meta.title,
+        slug: meta.slug,
+        seo: meta.seo,
+        blocks: store.toPayload(),
+    }),
+    onSaved: () => store.markClean(),
+});
 
-const blockIcons: Record<string, string> = {
-    hero: 'i-lucide-layout-template',
-    rich_text: 'i-lucide-text',
-    image: 'i-lucide-image',
-    cta: 'i-lucide-mouse-pointer-click',
-    features: 'i-lucide-list-checks',
-    testimonials: 'i-lucide-quote',
-    pricing: 'i-lucide-tag',
-    faq: 'i-lucide-circle-help',
-    form: 'i-lucide-clipboard-list',
-};
+const DEVICES = {
+    desktop: { label: 'Desktop', icon: 'i-lucide-monitor', width: '100%' },
+    tablet: { label: 'Tablet', icon: 'i-lucide-tablet', width: '768px' },
+    mobile: { label: 'Telemóvel', icon: 'i-lucide-smartphone', width: '375px' },
+} as const;
 
-function addBlock(type: string) {
-    form.blocks.push({
-        type,
-        content: type === 'rich_text' ? { html: '' } : {},
+const device = ref<keyof typeof DEVICES>('desktop');
+
+const siteVars = computed(() =>
+    toCssVars((props.site.settings ?? {}).design ?? {}),
+);
+
+const paletteOpen = ref(false);
+const insertIndex = ref<number | null>(null);
+
+function openPalette(index: number | null = null) {
+    insertIndex.value = index;
+    paletteOpen.value = true;
+}
+
+function onPick(type: BlockType) {
+    store.addBlock(type, insertIndex.value ?? undefined);
+    insertIndex.value = null;
+}
+
+async function removeBlock(block: EditorBlock) {
+    const confirmed = await confirm({
+        title: `Remover o bloco «${registry[block.type].label}»?`,
+        description: 'Podes desfazer com Cmd+Z enquanto não guardares.',
+        confirmLabel: 'Remover',
     });
+
+    if (confirmed) {
+        store.removeBlock(block.uid);
+    }
 }
 
-function removeBlock(index: number) {
-    form.blocks.splice(index, 1);
-}
+const saveLabel = computed(() => {
+    if (autosave.state.value === 'saving') {
+        return 'A guardar…';
+    }
+    if (autosave.state.value === 'error') {
+        return 'Erro ao guardar';
+    }
+    if (store.dirty.value) {
+        return 'Alterações por guardar';
+    }
+    if (autosave.lastSavedAt.value) {
+        return 'Guardado';
+    }
 
-function save() {
-    saving.value = true;
-    router.put(
-        `/sites/${props.site.id}/pages/${props.page.id}`,
-        { ...form },
-        {
-            onFinish: () => {
-                saving.value = false;
-            },
-            onSuccess: () =>
-                toast.add({ title: 'Page saved', color: 'success' }),
-        },
-    );
+    return 'Sem alterações';
+});
+
+function saveNow() {
+    autosave.save();
+    toast.add({ title: 'Página guardada', color: 'success' });
 }
 
 function togglePublish() {
-    router.post(`/sites/${props.site.id}/pages/${props.page.id}/publish`);
+    router.post(`${url}/publish`, undefined, { preserveScroll: true });
 }
+
+function touch() {
+    store.dirty.value = true;
+}
+
+defineShortcuts({
+    meta_z: () => store.undo(),
+    meta_shift_z: () => store.redo(),
+    meta_s: () => autosave.save(),
+});
 </script>
 
 <template>
-    <Head :title="`Edit — ${page.title}`" />
+    <Head :title="`Editor — ${page.title}`" />
 
-    <UDashboardPanel id="page-edit">
+    <UDashboardPanel id="page-editor">
         <template #header>
-            <UDashboardNavbar>
+            <UDashboardNavbar :title="page.title">
                 <template #leading>
                     <UDashboardSidebarCollapse />
                     <UButton
                         icon="i-lucide-arrow-left"
                         variant="ghost"
                         :to="`/sites/${site.id}`"
+                        aria-label="Voltar ao site"
                     />
-                    <span class="text-sm text-muted"
-                        >{{ site.name }} / Pages</span
-                    >
                 </template>
                 <template #right>
+                    <span class="hidden text-sm text-muted sm:block">{{
+                        saveLabel
+                    }}</span>
+                    <UButton
+                        icon="i-lucide-undo-2"
+                        variant="ghost"
+                        size="sm"
+                        :disabled="!store.canUndo.value"
+                        aria-label="Desfazer"
+                        @click="store.undo()"
+                    />
+                    <UButton
+                        icon="i-lucide-redo-2"
+                        variant="ghost"
+                        size="sm"
+                        :disabled="!store.canRedo.value"
+                        aria-label="Refazer"
+                        @click="store.redo()"
+                    />
                     <UBadge
-                        :label="page.status"
-                        :color="
-                            page.status === 'published' ? 'success' : 'neutral'
-                        "
+                        :label="statusLabel(page.status)"
+                        :color="statusColor(page.status)"
                         variant="subtle"
                     />
                     <UButton
                         :label="
                             page.status === 'published'
-                                ? 'Unpublish'
-                                : 'Publish'
+                                ? 'Despublicar'
+                                : 'Publicar'
                         "
                         variant="subtle"
+                        size="sm"
                         @click="togglePublish"
                     />
                     <UButton
-                        label="Save"
+                        label="Guardar"
                         icon="i-lucide-save"
-                        :loading="saving"
-                        @click="save"
+                        size="sm"
+                        :loading="autosave.state.value === 'saving'"
+                        @click="saveNow"
                     />
                 </template>
             </UDashboardNavbar>
+
+            <UDashboardToolbar>
+                <div class="flex w-full flex-wrap items-center gap-2 px-2">
+                    <UButton
+                        label="Adicionar bloco"
+                        icon="i-lucide-plus"
+                        size="xs"
+                        variant="subtle"
+                        @click="openPalette()"
+                    />
+                    <div class="ml-auto flex items-center gap-1">
+                        <UButton
+                            v-for="(config, key) in DEVICES"
+                            :key="key"
+                            :icon="config.icon"
+                            size="xs"
+                            :variant="device === key ? 'solid' : 'ghost'"
+                            :aria-label="config.label"
+                            :aria-pressed="device === key"
+                            @click="device = key"
+                        />
+                    </div>
+                </div>
+            </UDashboardToolbar>
         </template>
 
         <template #body>
-            <div
-                class="mx-auto grid w-full max-w-6xl gap-6 p-4 lg:grid-cols-[1fr_320px] lg:p-6"
-            >
-                <div class="space-y-4">
-                    <UInput
-                        v-model="form.title"
-                        placeholder="Page title"
-                        class="w-full"
-                        :ui="{ base: 'text-2xl font-semibold' }"
-                        variant="none"
-                    />
+            <div class="flex flex-col gap-4 p-4 lg:flex-row lg:p-6">
+                <div class="min-w-0 flex-1">
+                    <div class="mb-4 space-y-3">
+                        <UFormField
+                            label="Título da página"
+                            :error="meta.errors.title"
+                        >
+                            <UInput
+                                v-model="meta.title"
+                                class="w-full"
+                                @update:model-value="touch"
+                            />
+                        </UFormField>
+                        <UFormField label="Slug" :error="meta.errors.slug">
+                            <UInput
+                                v-model="meta.slug"
+                                class="w-full"
+                                @update:model-value="touch"
+                            />
+                        </UFormField>
+                    </div>
 
-                    <UEmpty
-                        v-if="form.blocks.length === 0"
-                        icon="i-lucide-layout-template"
-                        title="Empty page"
-                        description="Add your first block to start building."
-                    />
-
-                    <draggable
-                        v-model="form.blocks"
-                        item-key="type"
-                        handle=".drag-handle"
-                        ghost-class="opacity-40"
-                        class="space-y-3"
+                    <div
+                        class="mx-auto overflow-hidden rounded-lg border border-default transition-[max-width]"
+                        :style="{ maxWidth: DEVICES[device].width }"
                     >
-                        <template #item="{ element, index }">
-                            <UPageCard variant="outline" class="relative">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center gap-2">
-                                        <UIcon
-                                            name="i-lucide-grip-vertical"
-                                            class="drag-handle size-4 cursor-grab text-muted"
-                                        />
-                                        <UIcon
-                                            :name="
-                                                blockIcons[element.type] ??
-                                                'i-lucide-box'
+                        <div class="site-preview" :style="siteVars">
+                            <UEmpty
+                                v-if="store.blocks.value.length === 0"
+                                icon="i-lucide-layout-template"
+                                title="Página vazia"
+                                description="Adiciona o primeiro bloco para começar."
+                                :actions="[
+                                    {
+                                        label: 'Adicionar bloco',
+                                        icon: 'i-lucide-plus',
+                                        onClick: () => openPalette(),
+                                    },
+                                ]"
+                                class="py-20"
+                            />
+
+                            <draggable
+                                v-else
+                                :model-value="store.blocks.value"
+                                item-key="uid"
+                                handle=".block-drag-handle"
+                                class="space-y-1"
+                                @update:model-value="store.reorder($event)"
+                            >
+                                <template #item="{ element, index }">
+                                    <BlockShell
+                                        :label="registry[element.type].label"
+                                        :selected="
+                                            store.selectedUid.value ===
+                                            element.uid
+                                        "
+                                        :is-first="index === 0"
+                                        :is-last="
+                                            index ===
+                                            store.blocks.value.length - 1
+                                        "
+                                        @select="store.select(element.uid)"
+                                        @move-up="
+                                            store.moveBlock(element.uid, -1)
+                                        "
+                                        @move-down="
+                                            store.moveBlock(element.uid, 1)
+                                        "
+                                        @duplicate="
+                                            store.duplicateBlock(element.uid)
+                                        "
+                                        @remove="removeBlock(element)"
+                                        @insert-after="openPalette(index + 1)"
+                                    >
+                                        <BlockRenderer
+                                            :type="element.type"
+                                            :content="element.content"
+                                            editable
+                                            @edit="
+                                                (
+                                                    field: string,
+                                                    value: string,
+                                                ) =>
+                                                    store.updateField(
+                                                        element.uid,
+                                                        field,
+                                                        value,
+                                                    )
                                             "
-                                            class="size-4 text-primary"
                                         />
-                                        <span class="text-sm font-medium">{{
-                                            blockLabels[element.type] ??
-                                            element.type
-                                        }}</span>
-                                    </div>
-                                    <UButton
-                                        icon="i-lucide-trash-2"
-                                        size="xs"
-                                        color="error"
-                                        variant="ghost"
-                                        @click="removeBlock(index)"
-                                    />
-                                </div>
+                                    </BlockShell>
+                                </template>
+                            </draggable>
+                        </div>
+                    </div>
 
-                                <div class="mt-3">
-                                    <BlockEditor
-                                        v-model="element.content"
-                                        :type="element.type"
-                                    />
-                                </div>
-                            </UPageCard>
-                        </template>
-                    </draggable>
-
-                    <UDropdownMenu
-                        :items="
-                            blockTypes.map((type) => ({
-                                label: blockLabels[type] ?? type,
-                                icon: blockIcons[type] ?? 'i-lucide-box',
-                                onSelect: () => addBlock(type),
-                            }))
-                        "
-                    >
-                        <UButton
-                            label="Add block"
-                            icon="i-lucide-plus"
-                            variant="soft"
-                            block
-                        />
-                    </UDropdownMenu>
-                </div>
-
-                <div class="space-y-4">
-                    <UPageCard title="Page settings" variant="subtle">
+                    <UPageCard title="SEO" variant="subtle" class="mt-6">
                         <div class="space-y-3">
-                            <UFormField label="Slug">
-                                <UInput v-model="form.slug" class="w-full" />
-                            </UFormField>
-                            <UFormField label="SEO title">
+                            <UFormField label="Meta title">
                                 <UInput
-                                    v-model="form.seo.title"
-                                    class="w-full"
+                                    v-model="meta.seo.title"
                                     maxlength="70"
+                                    class="w-full"
+                                    @update:model-value="touch"
                                 />
                             </UFormField>
-                            <UFormField label="SEO description">
+                            <UFormField label="Meta description">
                                 <UTextarea
-                                    v-model="form.seo.description"
+                                    v-model="meta.seo.description"
                                     :rows="3"
-                                    class="w-full"
                                     maxlength="160"
+                                    class="w-full"
+                                    @update:model-value="touch"
                                 />
                             </UFormField>
                         </div>
                     </UPageCard>
                 </div>
+
+                <InspectorPanel
+                    :block="store.selected.value"
+                    :forms="forms"
+                    @update="
+                        (key: string, value: unknown) =>
+                            store.selectedUid.value &&
+                            store.updateField(
+                                store.selectedUid.value,
+                                key,
+                                value,
+                            )
+                    "
+                />
             </div>
+
+            <BlockPalette v-model:open="paletteOpen" @pick="onPick" />
         </template>
     </UDashboardPanel>
 </template>

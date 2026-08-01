@@ -1,9 +1,15 @@
+import { fileURLToPath, URL } from 'node:url';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import ui from '@nuxt/ui/vite';
 import {defineConfig} from 'vite-plus';
 
 export default defineConfig({
+    resolve: {
+        alias: {
+            '@blocks': fileURLToPath(new URL('./packages/blocks/src', import.meta.url)),
+        },
+    },
     fmt: {
         printWidth: 80,
         tabWidth: 4,

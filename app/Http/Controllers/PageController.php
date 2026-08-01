@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Enums\BlockType;
 use App\Http\Requests\StorePageRequest;
 use App\Http\Requests\UpdatePageRequest;
 use App\Models\Page;
@@ -23,10 +22,10 @@ final class PageController
         abort_unless($page->site_id === $site->id, 404);
 
         return Inertia::render('Pages/Edit', [
-            'site' => $site->only('id', 'name', 'slug'),
+            'site' => $site->only('id', 'name', 'slug', 'settings'),
             'page' => $page->only('id', 'title', 'slug', 'status', 'seo', 'published_at'),
-            'blocks' => $page->blocks()->get(['id', 'type', 'content', 'sort_order']),
-            'blockTypes' => BlockType::values(),
+            'blocks' => $page->blocks()->orderBy('sort_order')->get(['id', 'type', 'content', 'sort_order']),
+            'forms' => $site->forms()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
