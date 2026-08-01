@@ -6,9 +6,11 @@ namespace App\Services;
 
 use App\Enums\ContentStatus;
 use App\Enums\DeploymentStatus;
+use App\Enums\IntegrationProvider;
 use App\Jobs\DeploySite;
 use App\Models\Deployment;
 use App\Models\Form;
+use App\Models\Integration;
 use App\Models\Menu;
 use App\Models\Page;
 use App\Models\PageBlock;
@@ -60,6 +62,9 @@ final class SiteService
                 'type' => $site->type->value,
                 'domain' => $site->domain,
                 'settings' => $site->settings,
+                // Read by the renderer to inject gtag and the Search
+                // Console verification meta tag.
+                'integrations' => $this->integrationsFor($site),
             ],
             'menus' => $site->menus()->get(['name', 'items'])
                 ->mapWithKeys(fn (Menu $menu): array => [$menu->name => $menu->items])
@@ -118,5 +123,36 @@ final class SiteService
 
             return $version;
         });
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function integrationsFor(Site $site): array
+    {
+        $integrations = Integration::query()
+            ->where('site_id', $site->id)
+            ->where('status', 'connected')
+            ->get();
+
+        $payload = [];
+
+        foreach ($integrations as $integration) {
+            if ($integration->external_id === null) {
+                continue;
+            }
+
+            $key = match ($integration->provider) {
+                IntegrationProvider::GoogleAnalytics => 'ga4_measurement_id',
+                IntegrationProvider::SearchConsole => 'gsc_verification',
+                IntegrationProvider::Meta => null,
+            };
+
+            if ($key !== null) {
+                $payload[$key] = $integration->external_id;
+            }
+        }
+
+        return $payload;
     }
 }

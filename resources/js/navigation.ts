@@ -39,5 +39,6 @@ export const settingsNavigation: NavigationMenuItem[] = [
     { label: 'API & MCP', to: '/settings/api' },
     { label: 'Segurança', to: '/settings/security' },
     { label: 'Faturação', to: '/settings/billing' },
+    { label: 'Integrações', to: '/settings/integrations' },
     { label: 'Audit log', to: '/settings/audit' },
 ];

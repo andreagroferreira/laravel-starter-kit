@@ -10,8 +10,17 @@ const styleVars = computed(() =>
 
 const menu = computed(() => schema.value?.menus?.main ?? []);
 
+const gscVerification = computed(
+    () =>
+        (schema.value?.site?.integrations as Record<string, string> | undefined)
+            ?.gsc_verification ?? null,
+);
+
 useHead(() => ({
     htmlAttrs: { lang: 'pt-PT' },
+    meta: gscVerification.value
+        ? [{ name: 'google-site-verification', content: gscVerification.value }]
+        : [],
     style: [
         {
             innerHTML: `:root{${Object.entries(styleVars.value)

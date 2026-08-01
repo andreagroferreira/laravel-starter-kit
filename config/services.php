@@ -37,6 +37,18 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID', ''),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET', ''),
+        'redirect' => env('GOOGLE_REDIRECT_URI', '/settings/integrations/google_analytics/callback'),
+    ],
+
+    'facebook' => [
+        'client_id' => env('META_CLIENT_ID', ''),
+        'client_secret' => env('META_CLIENT_SECRET', ''),
+        'redirect' => env('META_REDIRECT_URI', '/settings/integrations/meta/callback'),
+    ],
+
     'cloudflare' => [
         'token' => env('CLOUDFLARE_API_TOKEN', ''),
         'account_id' => env('CLOUDFLARE_ACCOUNT_ID', ''),
