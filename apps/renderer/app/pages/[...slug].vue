@@ -11,12 +11,23 @@ const slug = computed(() => {
         ? route.params.slug.join('/')
         : String(route.params.slug ?? '');
 
-    return raw === '' ? 'home' : raw;
+    return raw.replace(/^\/+|\/+$/g, '');
 });
 
-const page = computed(
-    () => schema.value?.pages?.find((item) => item.slug === slug.value) ?? null,
-);
+// The CMS stores the homepage as "/" (and older sites as "home").
+const page = computed(() => {
+    const pages = schema.value?.pages ?? [];
+    const normalise = (value: string) => value.replace(/^\/+|\/+$/g, '');
+
+    if (slug.value === '') {
+        return (
+            pages.find((item) => ['', 'home'].includes(normalise(item.slug))) ??
+            null
+        );
+    }
+
+    return pages.find((item) => normalise(item.slug) === slug.value) ?? null;
+});
 
 if (!page.value) {
     throw createError({

@@ -1,8 +1,8 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
-@source '../../app/**/*.vue';
-@source '../../../../packages/blocks/src/**/*.vue';
+@source '../../**/*.vue';
+@source '../../../../../packages/blocks/src/**/*.vue';
 
 /*
  * Same variable contract as the editor canvas (.site-preview), so a block

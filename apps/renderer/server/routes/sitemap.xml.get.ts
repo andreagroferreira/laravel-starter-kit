@@ -16,7 +16,8 @@ export default defineEventHandler(async (event) => {
 
     const entries = (resolved.schema.pages ?? [])
         .map((page) => {
-            const path = page.slug === 'home' ? '/' : `/${page.slug}`;
+            const slug = page.slug.replace(/^\/+|\/+$/g, '');
+            const path = slug === '' || slug === 'home' ? '/' : `/${slug}`;
 
             return `  <url><loc>${origin}${path}</loc></url>`;
         })

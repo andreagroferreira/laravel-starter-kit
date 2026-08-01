@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
 
 export default defineNuxtConfig({
@@ -21,6 +22,14 @@ export default defineNuxtConfig({
     },
 
     css: ['~/assets/css/site.css'],
+
+    vite: {
+        plugins: [tailwindcss()],
+        server: {
+            // Every {slug}.wizcms.test hostname is a valid site in dev.
+            allowedHosts: ['.wizcms.test', '.localhost'],
+        },
+    },
 
     devtools: { enabled: false },
 });
