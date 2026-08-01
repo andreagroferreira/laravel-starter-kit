@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AiArticleController;
+use App\Http\Controllers\AiCopilotController;
 use App\Http\Controllers\AiCopyController;
 use App\Http\Controllers\AiGenerationController;
 use App\Http\Controllers\AiSeoController;
@@ -42,6 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::put('/media/{media}', [MediaController::class, 'update'])->name('media.update');
     Route::delete('/media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
 
+    Route::get('/ai', AiCopilotController::class)->name('ai.index');
     Route::get('/ai/generations/{generation}', AiGenerationController::class)->name('ai.generations.show');
 
     Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');

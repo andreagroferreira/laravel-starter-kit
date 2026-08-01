@@ -25,6 +25,11 @@ export const mainNavigation: NavigationMenuItem[] = [
         icon: 'i-lucide-inbox',
         to: '/leads',
     },
+    {
+        label: 'AI Copilot',
+        icon: 'i-lucide-sparkles',
+        to: '/ai',
+    },
 ];
 
 export const settingsNavigation: NavigationMenuItem[] = [

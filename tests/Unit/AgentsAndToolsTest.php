@@ -5,9 +5,14 @@ declare(strict_types=1);
 use App\Ai\Agents\ArticleWriterAgent;
 use App\Ai\Agents\CopywriterAgent;
 use App\Mcp\Tools\CreatePageTool;
+use App\Mcp\Tools\CreatePostDraftTool;
 use App\Mcp\Tools\GetPageTool;
+use App\Mcp\Tools\ListMediaTool;
+use App\Mcp\Tools\ListPostsTool;
 use App\Mcp\Tools\ListSitesTool;
+use App\Mcp\Tools\PublishSiteTool;
 use App\Mcp\Tools\UpdateBlocksTool;
+use App\Mcp\Tools\UpdatePostDraftTool;
 use App\Models\BrandProfile;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Session\Session;
@@ -47,7 +52,12 @@ it('defines schemas for all mcp tools', function (): void {
     expect((new ListSitesTool)->schema($factory))->toBeArray()
         ->and((new GetPageTool)->schema($factory))->toHaveKeys(['site_slug', 'page_slug'])
         ->and((new CreatePageTool)->schema($factory))->toHaveKeys(['site_slug', 'title', 'slug'])
-        ->and((new UpdateBlocksTool)->schema($factory))->toHaveKeys(['site_slug', 'page_slug', 'blocks']);
+        ->and((new UpdateBlocksTool)->schema($factory))->toHaveKeys(['site_slug', 'page_slug', 'blocks'])
+        ->and((new ListPostsTool)->schema($factory))->toHaveKeys(['site_slug', 'status'])
+        ->and((new CreatePostDraftTool)->schema($factory))->toHaveKeys(['site_slug', 'title', 'body', 'excerpt', 'seo_title', 'seo_description'])
+        ->and((new UpdatePostDraftTool)->schema($factory))->toHaveKeys(['site_slug', 'post_slug', 'title', 'body', 'excerpt'])
+        ->and((new ListMediaTool)->schema($factory))->toHaveKeys(['search'])
+        ->and((new PublishSiteTool)->schema($factory))->toHaveKeys(['site_slug']);
 });
 
 it('registers login two-factor and passkeys rate limiters', function (): void {

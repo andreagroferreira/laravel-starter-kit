@@ -5,9 +5,13 @@ declare(strict_types=1);
 use App\Enums\TenantRole;
 use App\Mcp\Servers\WizardServer;
 use App\Mcp\Tools\CreatePageTool;
+use App\Mcp\Tools\CreatePostDraftTool;
 use App\Mcp\Tools\GetPageTool;
+use App\Mcp\Tools\ListMediaTool;
+use App\Mcp\Tools\ListPostsTool;
 use App\Mcp\Tools\ListSitesTool;
 use App\Mcp\Tools\UpdateBlocksTool;
+use App\Mcp\Tools\UpdatePostDraftTool;
 use App\Models\Site;
 use App\Models\Tenant;
 use App\Models\User;
@@ -92,6 +96,32 @@ it('blocks the remaining tools for tokens without the matching ability', functio
 
     WizardServer::actingAs($this->user)
         ->tool(UpdateBlocksTool::class, ['site_slug' => $this->site->slug, 'page_slug' => 'x', 'blocks' => [['type' => 'hero']]])
+        ->assertHasErrors();
+});
+
+it('blocks every write tool for tokens without write:draft', function (): void {
+    Sanctum::actingAs($this->user, ['read']);
+    resolve(CurrentTenant::class)->set($this->tenant);
+
+    WizardServer::actingAs($this->user)
+        ->tool(CreatePostDraftTool::class, ['site_slug' => $this->site->slug, 'title' => 'X', 'body' => 'Y'])
+        ->assertHasErrors();
+
+    WizardServer::actingAs($this->user)
+        ->tool(UpdatePostDraftTool::class, ['site_slug' => $this->site->slug, 'post_slug' => 'x'])
+        ->assertHasErrors();
+});
+
+it('blocks read tools for tokens without read', function (): void {
+    Sanctum::actingAs($this->user, ['publish']);
+    resolve(CurrentTenant::class)->set($this->tenant);
+
+    WizardServer::actingAs($this->user)
+        ->tool(ListPostsTool::class, ['site_slug' => $this->site->slug])
+        ->assertHasErrors();
+
+    WizardServer::actingAs($this->user)
+        ->tool(ListMediaTool::class)
         ->assertHasErrors();
 });
 
